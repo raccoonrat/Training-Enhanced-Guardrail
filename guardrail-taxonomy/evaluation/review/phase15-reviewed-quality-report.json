@@ -68,7 +68,8 @@
     }
   },
   "integrity": {
-    "duplicate_sample_ids": []
+    "duplicate_sample_ids": [],
+    "review_state_conflict_sample_ids": []
   },
   "quality_gates": {
     "sft_min_records": true,
@@ -76,7 +77,8 @@
     "sft_has_train_val_test": true,
     "sft_has_all_primary_categories": true,
     "dpo_has_required_negative_modes": true,
-    "no_duplicate_sample_ids": true
+    "no_duplicate_sample_ids": true,
+    "no_review_state_conflicts": true
   },
   "passed": true,
   "schema": {

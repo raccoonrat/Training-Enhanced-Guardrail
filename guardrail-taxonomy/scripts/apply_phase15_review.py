@@ -22,6 +22,12 @@ APPROVE = "approve"
 REJECT = "reject"
 NEEDS_CHANGES = "needs_changes"
 VALID_DECISIONS = {APPROVE, REJECT, NEEDS_CHANGES}
+REVIEW_STATE_TAGS = {
+    "human_reviewed",
+    "review_incomplete",
+    "review_reject",
+    "review_needs_changes",
+}
 
 
 def _load_jsonl(path: Path) -> list[dict]:
@@ -75,6 +81,13 @@ def _append_tag(record: dict, tag: str) -> None:
         tags.append(tag)
 
 
+def _set_review_state_tag(record: dict, tag: str) -> None:
+    quality = record.setdefault("quality", {})
+    tags = quality.setdefault("tags", [])
+    quality["tags"] = [existing for existing in tags if existing not in REVIEW_STATE_TAGS]
+    _append_tag(record, tag)
+
+
 def _review_metadata(decision: dict, applied_status: str) -> dict:
     reviewed_at = decision.get("reviewed_at") or datetime.now(UTC).isoformat()
     return {
@@ -107,17 +120,17 @@ def apply_reviews(records: list[dict], decisions: dict[str, dict]) -> tuple[list
         if review_decision == APPROVE and reviewer and checklist_passed:
             quality["review_status"] = "human_reviewed"
             quality["review"] = _review_metadata(decision, "human_reviewed")
-            _append_tag(record, "human_reviewed")
+            _set_review_state_tag(record, "human_reviewed")
             summary["approved"] += 1
         elif review_decision == APPROVE:
             quality["review_status"] = "pending_human_review"
             quality["review"] = _review_metadata(decision, "pending_human_review")
-            _append_tag(record, "review_incomplete")
+            _set_review_state_tag(record, "review_incomplete")
             summary["approve_incomplete"] += 1
         else:
             quality["review_status"] = "pending_human_review"
             quality["review"] = _review_metadata(decision, "pending_human_review")
-            _append_tag(record, f"review_{review_decision}")
+            _set_review_state_tag(record, f"review_{review_decision}")
             summary[review_decision] += 1
 
         output.append(record)

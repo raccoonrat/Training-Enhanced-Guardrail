@@ -21,6 +21,12 @@ MIN_DPO_PAIRS = 50
 REQUIRED_SFT_SPLITS = {"train", "val", "test"}
 REQUIRED_CATEGORIES = {"SEC", "PRI", "SAF", "REL"}
 REQUIRED_DPO_MODES = {"unsafe_allow", "over_refusal", "missing_audit"}
+REVIEW_STATE_TAGS = {
+    "human_reviewed",
+    "review_incomplete",
+    "review_reject",
+    "review_needs_changes",
+}
 
 
 def _load_jsonl(path: Path) -> list[dict]:
@@ -74,6 +80,16 @@ def build_report(sft_records: list[dict], dpo_records: list[dict]) -> dict:
     review_status_counts = Counter(
         record.get("quality", {}).get("review_status", "missing") for record in sft_records
     )
+    review_state_conflicts = []
+    for record in sft_records:
+        quality = record.get("quality", {})
+        status = quality.get("review_status")
+        tags = set(quality.get("tags", []))
+        state_tags = sorted(tags & REVIEW_STATE_TAGS)
+        if status == "human_reviewed" and any(tag != "human_reviewed" for tag in state_tags):
+            review_state_conflicts.append(record["sample_id"])
+        if status == "pending_human_review" and "human_reviewed" in state_tags:
+            review_state_conflicts.append(record["sample_id"])
     dpo_modes = Counter(_dpo_mode(record) for record in dpo_records)
 
     gates = {
@@ -83,6 +99,7 @@ def build_report(sft_records: list[dict], dpo_records: list[dict]) -> dict:
         "sft_has_all_primary_categories": REQUIRED_CATEGORIES.issubset(category_counts),
         "dpo_has_required_negative_modes": REQUIRED_DPO_MODES.issubset(dpo_modes),
         "no_duplicate_sample_ids": not _duplicates(sft_ids + dpo_ids),
+        "no_review_state_conflicts": not review_state_conflicts,
     }
 
     return {
@@ -101,6 +118,7 @@ def build_report(sft_records: list[dict], dpo_records: list[dict]) -> dict:
         },
         "integrity": {
             "duplicate_sample_ids": _duplicates(sft_ids + dpo_ids),
+            "review_state_conflict_sample_ids": review_state_conflicts,
         },
         "quality_gates": gates,
         "passed": all(gates.values()),

@@ -69,6 +69,7 @@ Phase 1.5 审计脚本当前硬门槛：
 - SFT 覆盖 SEC / PRI / SAF / REL 四个主类
 - DPO 负例覆盖 unsafe allow、over-refusal、missing audit
 - 全量样本无重复 `sample_id` 且 schema-valid
+- `review_status` 与 review 状态标签无冲突（例如 `human_reviewed` 不得同时带 `review_incomplete`）
 
 ### Phase 1.5 人工审核工作流
 
