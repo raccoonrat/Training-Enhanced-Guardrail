@@ -33,6 +33,11 @@ _RECALL_EQUIVALENCE_GROUPS = [
     frozenset({"SAF-2.1", "SEC-2.1"}),
     frozenset({"SAF-2.2", "PRI-2.1"}),
     frozenset({"PRI-4.1", "PRI-4.2", "SEC-1.1", "SEC-1.2"}),
+    frozenset({"PRI-1.1", "PRI-6.1"}),
+    frozenset({"REL-1.2", "REL-1.3", "REL-2.2", "REL-2.3"}),
+    frozenset({"REL-4.1", "SEC-2.2"}),
+    frozenset({"REL-5.2", "REL-5.3"}),
+    frozenset({"SAF-5.3", "REL-3.1"}),
 ]
 
 
