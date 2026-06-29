@@ -1,0 +1,304 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/training-record.schema.json",
+  "title": "Guardrail Training Record Schema",
+  "description": "Unified training data format for SFT, DPO, KTO, and RLVR guardrail post-training.",
+  "oneOf": [
+    { "$ref": "#/$defs/sft_record" },
+    { "$ref": "#/$defs/dpo_record" },
+    { "$ref": "#/$defs/kto_record" }
+  ],
+  "$defs": {
+    "input_block": {
+      "type": "object",
+      "required": ["user_message"],
+      "properties": {
+        "user_message": { "type": "string" },
+        "conversation_history": {
+          "type": "array",
+          "items": { "type": "object" },
+          "default": []
+        },
+        "retrieval_context": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "tool_call": { "type": ["object", "null"], "default": null },
+        "tool_result": { "type": ["object", "null"], "default": null },
+        "agent_plan": { "type": ["string", "null"], "default": null },
+        "memory": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "locale": { "type": "string" },
+            "product_area": { "type": "string" },
+            "scenario": { "type": "string" }
+          }
+        }
+      }
+    },
+    "labels_block": {
+      "type": "object",
+      "required": [
+        "risk_surface",
+        "intent_context",
+        "primary_category",
+        "risk_ids",
+        "severity",
+        "decision",
+        "control_actions",
+        "audit_required",
+        "human_review_required"
+      ],
+      "properties": {
+        "risk_surface": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "intent_context": { "type": "string" },
+        "authority_status": { "type": "string" },
+        "primary_category": {
+          "type": "string",
+          "enum": ["SEC", "PRI", "SAF", "REL"]
+        },
+        "secondary_categories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["SEC", "PRI", "SAF", "REL"]
+          },
+          "default": []
+        },
+        "risk_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(SEC|PRI|SAF|REL)-[0-9]+\\.[0-9]+$"
+          },
+          "minItems": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "decision": { "type": "string" },
+        "control_actions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "audit_required": { "type": "boolean" },
+        "human_review_required": { "type": "boolean" },
+        "release_gate_impact": {
+          "type": "string",
+          "enum": ["none", "warning", "block"],
+          "default": "none"
+        }
+      }
+    },
+    "expected_output_block": {
+      "type": "object",
+      "required": [
+        "decision",
+        "primary_category",
+        "risk_ids",
+        "severity",
+        "confidence",
+        "risk_surface",
+        "intent_context",
+        "evidence",
+        "control_actions",
+        "audit_required",
+        "human_review_required"
+      ],
+      "properties": {
+        "decision": { "type": "string" },
+        "primary_category": {
+          "type": "string",
+          "enum": ["SEC", "PRI", "SAF", "REL"]
+        },
+        "secondary_categories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["SEC", "PRI", "SAF", "REL"]
+          },
+          "default": []
+        },
+        "risk_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "risk_surface": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "intent_context": { "type": "string" },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string" },
+              "value": { "type": "string" },
+              "redacted": { "type": "boolean", "default": false }
+            }
+          }
+        },
+        "control_actions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "recommended_safe_response": { "type": "string" },
+        "audit_required": { "type": "boolean" },
+        "human_review_required": { "type": "boolean" },
+        "release_gate_impact": {
+          "type": "string",
+          "enum": ["none", "warning", "block"],
+          "default": "none"
+        }
+      }
+    },
+    "quality_block": {
+      "type": "object",
+      "properties": {
+        "source": { "type": "string" },
+        "review_status": {
+          "type": "string",
+          "enum": ["pending_human_review", "human_reviewed", "synthetic_seed", "benchmark_derived"]
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["easy", "medium", "hard"]
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "sft_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sample_id",
+        "schema_version",
+        "taxonomy_version",
+        "policy_version",
+        "task_type",
+        "split",
+        "input",
+        "labels",
+        "expected_output"
+      ],
+      "properties": {
+        "sample_id": { "type": "string" },
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "taxonomy_version": { "type": "string" },
+        "policy_version": { "type": "string" },
+        "task_type": { "type": "string", "const": "guardrail_decision" },
+        "split": {
+          "type": "string",
+          "enum": ["train", "val", "test"]
+        },
+        "input": { "$ref": "#/$defs/input_block" },
+        "labels": { "$ref": "#/$defs/labels_block" },
+        "expected_output": { "$ref": "#/$defs/expected_output_block" },
+        "training_objective": {
+          "type": "object",
+          "properties": {
+            "sft": { "type": "boolean" },
+            "dpo": { "type": "boolean" },
+            "kto": { "type": "boolean" },
+            "rlvr": { "type": "boolean" }
+          }
+        },
+        "quality": { "$ref": "#/$defs/quality_block" }
+      }
+    },
+    "dpo_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sample_id",
+        "schema_version",
+        "task_type",
+        "input",
+        "chosen",
+        "rejected",
+        "preference_reason"
+      ],
+      "properties": {
+        "sample_id": { "type": "string" },
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "task_type": { "type": "string", "const": "guardrail_preference_pair" },
+        "input": {
+          "type": "object",
+          "required": ["user_message"],
+          "properties": {
+            "user_message": { "type": "string" },
+            "risk_surface": { "type": "array", "items": { "type": "string" } },
+            "intent_context": { "type": "string" }
+          }
+        },
+        "chosen": { "$ref": "#/$defs/expected_output_block" },
+        "rejected": { "$ref": "#/$defs/expected_output_block" },
+        "preference_reason": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "kto_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sample_id",
+        "schema_version",
+        "task_type",
+        "input",
+        "candidate_output",
+        "label",
+        "feedback_reason"
+      ],
+      "properties": {
+        "sample_id": { "type": "string" },
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "task_type": { "type": "string", "const": "guardrail_binary_feedback" },
+        "input": {
+          "type": "object",
+          "required": ["user_message"],
+          "properties": {
+            "user_message": { "type": "string" },
+            "risk_surface": { "type": "array", "items": { "type": "string" } },
+            "intent_context": { "type": "string" },
+            "authority_status": { "type": "string" }
+          }
+        },
+        "candidate_output": { "$ref": "#/$defs/expected_output_block" },
+        "label": { "type": "boolean" },
+        "feedback_reason": { "type": "string" }
+      }
+    }
+  }
+}

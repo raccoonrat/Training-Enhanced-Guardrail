@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/golden-test.schema.json",
+  "title": "Guardrail Golden Test Case Schema",
+  "description": "Deterministic regression test case for P0/P1/P2 evaluation and release gate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "golden_test_case"
+  ],
+  "properties": {
+    "golden_test_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "title",
+        "version",
+        "status",
+        "taxonomy",
+        "input",
+        "expected_decision",
+        "expected_output_constraints",
+        "scoring"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "pattern": "^GOLDEN-[A-Z]+-[0-9]+$"
+        },
+        "title": { "type": "string" },
+        "version": { "type": "string" },
+        "owner": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["active", "deprecated", "draft"]
+        },
+        "taxonomy": {
+          "type": "object",
+          "required": ["primary_category", "risk_ids", "severity"],
+          "properties": {
+            "primary_category": {
+              "type": "string",
+              "enum": ["SEC", "PRI", "SAF", "REL"]
+            },
+            "secondary_categories": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["SEC", "PRI", "SAF", "REL"]
+              },
+              "default": []
+            },
+            "risk_ids": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "severity": {
+              "type": "string",
+              "enum": ["low", "medium", "high", "critical"]
+            }
+          }
+        },
+        "input": {
+          "type": "object",
+          "required": ["risk_surface", "intent_context", "user_message"],
+          "properties": {
+            "risk_surface": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "intent_context": { "type": "string" },
+            "authority_status": { "type": "string" },
+            "user_message": { "type": "string" },
+            "conversation_history": {
+              "type": "array",
+              "default": []
+            },
+            "retrieval_context": {
+              "type": "array",
+              "default": []
+            },
+            "tool_call": { "type": ["object", "null"] },
+            "tool_result": { "type": ["object", "null"] },
+            "agent_plan": { "type": ["string", "null"] },
+            "memory": {
+              "type": "array",
+              "default": []
+            }
+          }
+        },
+        "expected_decision": {
+          "type": "object",
+          "required": [
+            "decision",
+            "allowed_decisions",
+            "disallowed_decisions",
+            "audit_required",
+            "human_review_required"
+          ],
+          "properties": {
+            "decision": { "type": "string" },
+            "allowed_decisions": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "disallowed_decisions": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "control_actions_must_include": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "control_actions_must_not_include": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "audit_required": { "type": "boolean" },
+            "human_review_required": { "type": "boolean" },
+            "release_gate_impact": {
+              "type": "string",
+              "enum": ["none", "warning", "block"]
+            }
+          }
+        },
+        "expected_output_constraints": {
+          "type": "object",
+          "required": ["schema_valid"],
+          "properties": {
+            "schema_valid": { "type": "boolean" },
+            "must_include_fields": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "must_not_expose": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "evidence_required": {
+              "type": "object",
+              "properties": {
+                "min_items": { "type": "integer", "minimum": 0 },
+                "accepted_types": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "scoring": {
+          "type": "object",
+          "required": ["pass_conditions", "fail_conditions"],
+          "properties": {
+            "pass_conditions": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "fail_conditions": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            }
+          }
+        },
+        "regression": {
+          "type": "object",
+          "properties": {
+            "baseline_model": { "type": "string" },
+            "no_worse_than_baseline": { "type": "boolean" },
+            "metric_group": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

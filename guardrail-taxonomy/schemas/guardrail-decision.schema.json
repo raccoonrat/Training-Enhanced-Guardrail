@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/guardrail-decision.schema.json",
+  "title": "Guardrail Decision Schema",
+  "description": "Canonical structured decision output for Guardrail LLM and Enterprise AI Security Control Plane.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision_id",
+    "decision",
+    "primary_category",
+    "risk_ids",
+    "severity",
+    "confidence",
+    "risk_surface",
+    "intent_context",
+    "evidence",
+    "control_actions",
+    "audit_required",
+    "human_review_required"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "decision_id": {
+      "type": "string",
+      "description": "Unique decision identifier for traceability.",
+      "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "Optional upstream request/session identifier.",
+      "maxLength": 256
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "allow_with_constraints",
+        "safe_complete",
+        "refuse",
+        "redact",
+        "transform",
+        "escalate",
+        "block_tool_call",
+        "require_reauth",
+        "rate_limit",
+        "log_only",
+        "terminate_execution"
+      ]
+    },
+    "primary_category": {
+      "type": "string",
+      "enum": ["SEC", "PRI", "SAF", "REL"]
+    },
+    "secondary_categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["SEC", "PRI", "SAF", "REL"]
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "risk_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^(SEC|PRI|SAF|REL)-[0-9]+\\.[0-9]+$"
+      },
+      "uniqueItems": true
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "risk_surface": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "user_input",
+          "model_output",
+          "tool_call",
+          "tool_result",
+          "agent_plan",
+          "memory",
+          "retrieval_context",
+          "system_prompt",
+          "tool_schema",
+          "logs",
+          "external_integration",
+          "evaluation_results",
+          "conversation_history"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "intent_context": {
+      "type": "string",
+      "enum": [
+        "malicious",
+        "ambiguous",
+        "benign",
+        "authorized",
+        "defensive",
+        "educational",
+        "administrative",
+        "compliance_query",
+        "data_subject_request",
+        "business_operation",
+        "fictional_or_simulated"
+      ]
+    },
+    "authority_status": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "user_authorized",
+        "admin_authorized",
+        "policy_authorized",
+        "insufficient_authority",
+        "explicitly_unauthorized"
+      ],
+      "default": "unknown"
+    },
+    "control_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "allow",
+          "allow_with_constraints",
+          "safe_complete",
+          "refuse",
+          "redact",
+          "transform",
+          "escalate",
+          "block_tool_call",
+          "require_reauth",
+          "rate_limit",
+          "log_only",
+          "terminate_execution",
+          "strip_untrusted_instruction",
+          "quarantine_memory_item",
+          "minimize_payload",
+          "mask_sensitive_fields",
+          "require_scope",
+          "sandbox_only",
+          "require_human_approval",
+          "release_block",
+          "rollback_candidate"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Evidence supporting the decision. Must not expose secrets, credentials, hidden instructions, or unnecessary personal data.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "risk_span",
+              "policy_reference",
+              "affected_resource",
+              "affected_identity",
+              "tool_name",
+              "data_type",
+              "confidence_reason",
+              "mapping_rule",
+              "retrieval_source",
+              "schema_violation"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "redacted": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "default": []
+    },
+    "policy_references": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "recommended_safe_response": {
+      "type": "string",
+      "description": "Safe user-facing response or guidance. Must not contain disallowed operational details.",
+      "maxLength": 4096
+    },
+    "redaction_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "redacted_fields": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "redaction_reason": {
+          "type": "string",
+          "maxLength": 1024
+        }
+      }
+    },
+    "runtime_constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_tool_calls": { "type": "integer", "minimum": 0 },
+        "max_runtime_seconds": { "type": "integer", "minimum": 0 },
+        "allowed_tools": { "type": "array", "items": { "type": "string" } },
+        "blocked_tools": { "type": "array", "items": { "type": "string" } },
+        "requires_sandbox": { "type": "boolean" },
+        "requires_reauth": { "type": "boolean" }
+      }
+    },
+    "audit_required": { "type": "boolean" },
+    "human_review_required": { "type": "boolean" },
+    "release_gate_impact": {
+      "type": "string",
+      "enum": ["none", "warning", "block"],
+      "default": "none"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "model_name": { "type": "string" },
+        "model_version": { "type": "string" },
+        "policy_version": { "type": "string" },
+        "taxonomy_version": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "severity": { "const": "critical" } } },
+      "then": {
+        "properties": {
+          "audit_required": { "const": true },
+          "human_review_required": { "const": true },
+          "release_gate_impact": { "enum": ["warning", "block"] }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "enum": ["block_tool_call", "terminate_execution", "require_reauth"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "audit_required": { "const": true }
+        }
+      }
+    }
+  ]
+}

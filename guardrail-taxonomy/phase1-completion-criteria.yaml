@@ -1,0 +1,51 @@
+version: "1.0.0"
+title: Phase 1 Completion Criteria
+
+phase_1_done_definition:
+  taxonomy:
+    - All risk IDs have stable names, descriptions, severity defaults, and control mappings.
+    - Machine-readable YAML at taxonomy/risk-taxonomy.v1.yaml
+
+  policy_mapping:
+    - Global decision priority rules G1–G6 defined.
+    - Per-threat mappings linked to decision, control actions, audit flags.
+    - Machine-readable YAML at taxonomy/policy-to-decision-mapping.v1.yaml
+
+  schema:
+    - Guardrail decision schema validates runtime outputs.
+    - Training JSONL format supports SFT, DPO, KTO, and RLVR records.
+    - Golden test schema supports deterministic regression evaluation.
+
+  golden_tests:
+    - Each major risk class has at least one deterministic golden test.
+    - Each golden test has pass/fail conditions and regression metadata.
+
+  lint:
+    - Policy lint rules catch unsafe allow, missing redaction, missing audit, invalid enum, and critical severity inconsistency.
+    - Lint config wires rules to schemas and target globs.
+
+  p0_benchmark:
+    - Seed set covers SEC, PRI, SAF, REL, and benign / near-restricted cases.
+    - No P0 test case contains actionable harmful operational details.
+    - All cases map to expected decision and control actions.
+
+  training_bootstrap:
+  # Phase 1 provides format + seed; full 5K–10K is Phase 1.5
+    - SFT seed bootstrap derived from P0 cases.
+    - Training record schema validates sample structure.
+
+  release_gate_ready:
+    - P0 benchmark can run automatically before model/policy release.
+    - Critical unsafe allow is a hard-block condition.
+    - Release gate mapping defined in policy-to-decision-mapping.v1.yaml
+
+deliverables_checklist:
+  - guardrail_decision_json_schema: done
+  - training_data_jsonl_format: done
+  - golden_test_case_template: done
+  - policy_lint_rules: done
+  - p0_benchmark_seed_set: done
+  - risk_taxonomy_yaml: done
+  - policy_to_decision_mapping_yaml: done
+  - sft_seed_bootstrap_26_samples: done
+  - full_5k_10k_sft_samples: pending_phase_1_5

@@ -1,0 +1,77 @@
+version: "1.0.0"
+title: Guardrail Policy Lint Configuration
+
+rules_file: policy-lint-rules.v1.yaml
+taxonomy_file: ../taxonomy/risk-taxonomy.v1.yaml
+policy_mapping_file: ../taxonomy/policy-to-decision-mapping.v1.yaml
+
+schemas:
+  decision: ../schemas/guardrail-decision.schema.json
+  training_record: ../schemas/training-record.schema.json
+  golden_test: ../schemas/golden-test.schema.json
+
+targets:
+  decision_output:
+    schema: decision
+    rules:
+      - LINT-SCHEMA-001
+      - LINT-SCHEMA-002
+      - LINT-TAX-001
+      - LINT-TAX-002
+      - LINT-DEC-001
+      - LINT-DEC-002
+      - LINT-PRI-001
+      - LINT-PRI-002
+      - LINT-SEC-001
+      - LINT-SEC-002
+      - LINT-SAF-001
+      - LINT-SAF-002
+      - LINT-REL-001
+
+  training_record:
+    schema: training_record
+    glob: ../training/*.jsonl
+    rules:
+      - LINT-SCHEMA-001
+      - LINT-SCHEMA-002
+      - LINT-TAX-001
+      - LINT-TAX-002
+      - LINT-DEC-001
+      - LINT-DEC-002
+      - LINT-PRI-001
+      - LINT-PRI-002
+      - LINT-SEC-001
+      - LINT-SAF-001
+      - LINT-TRAIN-001
+      - LINT-TRAIN-002
+
+  golden_test:
+    schema: golden_test
+    glob: ../golden/*.yaml
+    rules:
+      - LINT-SCHEMA-001
+      - LINT-TAX-001
+      - LINT-TAX-002
+      - LINT-DEC-001
+      - LINT-DEC-002
+      - LINT-PRI-001
+      - LINT-SEC-001
+      - LINT-SAF-001
+      - LINT-GOLDEN-001
+      - LINT-GOLDEN-002
+
+  evaluation_result:
+    rules:
+      - LINT-REL-001
+      - LINT-REL-002
+
+severity_policy:
+  error: block_merge
+  warning: report_only
+
+autofix:
+  enabled: true
+  allowed_rules:
+    - LINT-TAX-002
+    - LINT-PRI-001
+    - LINT-REL-001
