@@ -46,6 +46,20 @@ guardrail-taxonomy/
 python3 scripts/generate_phase1_assets.py
 ```
 
+### 生成 Phase 1.5 训练 bootstrap
+
+```bash
+python3 scripts/generate_phase15_assets.py
+```
+
+Phase 1.5 保持 P0 benchmark 不变，基于 26 条 P0 seed 派生可重复生成的训练资产：
+
+- `training/phase15-sft-bootstrap.jsonl` — 104 条 SFT 样本（每条 P0 4 个确定性 prompt/context 变体）
+- `training/phase15-dpo-preference-bootstrap.jsonl` — 52 条 DPO preference pairs（unsafe allow、over-refusal、missing audit 等负例）
+- `evaluation/phase15-dataset-manifest.json` — 样本数量、类别/decision 覆盖率与质量说明
+
+这些记录全部符合 `schemas/training-record.schema.json`，但 `review_status` 保持为 `pending_human_review`；它们用于 Phase 1.5 管线演练和人工审核 bootstrap，不替代最终 5K–10K 高质量数据集。
+
 ### P0 评测集统计
 
 - 合计 **26** 条 P0 seed cases（SEC 5 + PRI 5 + SAF 6 + REL 5 + Benign 5）
@@ -195,10 +209,18 @@ p0_benchmark: 覆盖 SEC/PRI/SAF/REL/benign；无行动化有害细节
 release_gate_ready: P0 可在发布前自动运行；critical unsafe allow 为硬阻断
 ```
 
-## 下一步（Phase 1.5 / Phase 2 前置）
+## Phase 1.5 当前状态
 
-1. 扩展至 100+ 人工审核 SFT/DPO bootstrap 样本
-2. ~~实现 P0 runner scoring rubric 与 rule-based judge~~ ✅ 已完成（见 `p0eval/`）
-3. 为真实 Guardrail LLM 增加 provider（vLLM / OpenAI 兼容 API）并接入 CI/CD release gate
-4. 按 taxonomy 覆盖率扩展至 5K–10K 高质量训练样本
-5. 补充 LLM-as-judge 作为 rule-based judge 的二级裁判（多裁判集成降低 reward hacking）
+已完成：
+
+1. 100+ SFT/DPO bootstrap 样本生成器与产物
+2. OpenRouter `gpt-oss-safeguard-20b` provider 接入
+3. P0 runner + rule-based judge + scoring rubric + release gate
+4. 全量 26 条 P0 OpenRouter 回归达到 PASS
+
+待推进：
+
+1. 对 Phase 1.5 bootstrap 样本做人工审核并标记 `human_reviewed`
+2. 按 taxonomy 覆盖率扩展至 5K–10K 高质量训练样本
+3. 补充 LLM-as-judge 作为 rule-based judge 的二级裁判
+4. 将 runner 接入 CI/CD release gate

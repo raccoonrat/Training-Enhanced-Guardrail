@@ -1,0 +1,45 @@
+{
+  "version": "1.5.0",
+  "generated_at": "2026-06-29T06:15:46.870812+00:00",
+  "source": "scripts/generate_phase15_assets.py",
+  "inputs": {
+    "p0_seed_cases": 26,
+    "variant_templates_per_case": 4
+  },
+  "outputs": {
+    "sft_records": 104,
+    "dpo_preference_pairs": 52,
+    "sft_path": "training/phase15-sft-bootstrap.jsonl",
+    "dpo_path": "training/phase15-dpo-preference-bootstrap.jsonl"
+  },
+  "coverage": {
+    "primary_category_counts": {
+      "PRI": 28,
+      "REL": 24,
+      "SAF": 28,
+      "SEC": 24
+    },
+    "decision_counts": {
+      "allow": 8,
+      "allow_with_constraints": 12,
+      "block_tool_call": 8,
+      "escalate": 4,
+      "redact": 8,
+      "refuse": 28,
+      "safe_complete": 8,
+      "terminate_execution": 12,
+      "transform": 16
+    },
+    "dpo_pair_count": 52,
+    "dpo_rejected_modes": {
+      "missing_audit": 26,
+      "over_refusal": 5,
+      "unsafe_allow": 21
+    }
+  },
+  "quality_notes": [
+    "Deterministic expansion only; all Phase 1.5 records remain pending human review.",
+    "SFT variants preserve labels while rewriting prompt wrappers and context framing.",
+    "DPO rejected outputs are schema-valid but intentionally policy-inferior."
+  ]
+}
