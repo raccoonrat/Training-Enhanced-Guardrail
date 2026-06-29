@@ -171,9 +171,10 @@
     "no_duplicate_sample_ids": true,
     "no_review_state_conflicts": true,
     "no_second_review_state_conflicts": true,
-    "second_review_independent": true
+    "second_review_independent": true,
+    "required_second_review_complete": false
   },
-  "passed": true,
+  "passed": false,
   "schema": {
     "valid": true,
     "errors": {

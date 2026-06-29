@@ -27,6 +27,12 @@ REVIEW_STATE_TAGS = {
     "review_reject",
     "review_needs_changes",
 }
+SECOND_REVIEW_STATE_TAGS = {
+    "second_reviewed",
+    "second_review_incomplete",
+    "second_review_challenge",
+    "second_review_needs_changes",
+}
 
 
 def _load_jsonl(path: Path) -> list[dict]:
@@ -67,7 +73,20 @@ def _dpo_mode(record: dict) -> str:
     return evidence.split(" candidate for ", maxsplit=1)[0]
 
 
-def build_report(sft_records: list[dict], dpo_records: list[dict]) -> dict:
+def _second_review_required(record: dict) -> bool:
+    quality = record.get("quality", {})
+    labels = record["labels"]
+    if quality.get("review_status") != "human_reviewed":
+        return False
+    return labels["severity"] in {"high", "critical"} or labels["primary_category"] == "REL"
+
+
+def build_report(
+    sft_records: list[dict],
+    dpo_records: list[dict],
+    *,
+    require_second_review: bool = False,
+) -> dict:
     sft_ids = [record["sample_id"] for record in sft_records]
     dpo_ids = [record["sample_id"] for record in dpo_records]
 
@@ -80,7 +99,17 @@ def build_report(sft_records: list[dict], dpo_records: list[dict]) -> dict:
     review_status_counts = Counter(
         record.get("quality", {}).get("review_status", "missing") for record in sft_records
     )
+    second_review_counts = Counter(
+        record.get("quality", {})
+        .get("second_review", {})
+        .get("applied_status", "missing")
+        for record in sft_records
+    )
     review_state_conflicts = []
+    second_review_state_conflicts = []
+    second_review_required_ids = []
+    second_review_missing_ids = []
+    same_reviewer_second_review_ids = []
     for record in sft_records:
         quality = record.get("quality", {})
         status = quality.get("review_status")
@@ -90,6 +119,21 @@ def build_report(sft_records: list[dict], dpo_records: list[dict]) -> dict:
             review_state_conflicts.append(record["sample_id"])
         if status == "pending_human_review" and "human_reviewed" in state_tags:
             review_state_conflicts.append(record["sample_id"])
+        second_review = quality.get("second_review", {})
+        second_status = second_review.get("applied_status")
+        second_tags = sorted(tags & SECOND_REVIEW_STATE_TAGS)
+        if second_status == "second_reviewed" and any(tag != "second_reviewed" for tag in second_tags):
+            second_review_state_conflicts.append(record["sample_id"])
+        if second_status != "second_reviewed" and "second_reviewed" in second_tags:
+            second_review_state_conflicts.append(record["sample_id"])
+        if _second_review_required(record):
+            second_review_required_ids.append(record["sample_id"])
+            if second_status != "second_reviewed":
+                second_review_missing_ids.append(record["sample_id"])
+        first_reviewer = quality.get("review", {}).get("reviewer")
+        second_reviewer = second_review.get("reviewer")
+        if second_status == "second_reviewed" and first_reviewer and first_reviewer == second_reviewer:
+            same_reviewer_second_review_ids.append(record["sample_id"])
     dpo_modes = Counter(_dpo_mode(record) for record in dpo_records)
 
     gates = {
@@ -100,7 +144,11 @@ def build_report(sft_records: list[dict], dpo_records: list[dict]) -> dict:
         "dpo_has_required_negative_modes": REQUIRED_DPO_MODES.issubset(dpo_modes),
         "no_duplicate_sample_ids": not _duplicates(sft_ids + dpo_ids),
         "no_review_state_conflicts": not review_state_conflicts,
+        "no_second_review_state_conflicts": not second_review_state_conflicts,
+        "second_review_independent": not same_reviewer_second_review_ids,
     }
+    if require_second_review:
+        gates["required_second_review_complete"] = not second_review_missing_ids
 
     return {
         "version": "1.5.0",
@@ -114,11 +162,19 @@ def build_report(sft_records: list[dict], dpo_records: list[dict]) -> dict:
             "decision_counts": dict(sorted(decision_counts.items())),
             "risk_id_counts": dict(sorted(risk_id_counts.items())),
             "review_status_counts": dict(sorted(review_status_counts.items())),
+            "second_review_status_counts": dict(sorted(second_review_counts.items())),
             "dpo_rejected_modes": dict(sorted(dpo_modes.items())),
         },
         "integrity": {
             "duplicate_sample_ids": _duplicates(sft_ids + dpo_ids),
             "review_state_conflict_sample_ids": review_state_conflicts,
+            "second_review_state_conflict_sample_ids": second_review_state_conflicts,
+            "same_reviewer_second_review_sample_ids": same_reviewer_second_review_ids,
+        },
+        "second_review": {
+            "required_by_policy_count": len(second_review_required_ids),
+            "missing_required_count": len(second_review_missing_ids),
+            "missing_required_sample_ids": second_review_missing_ids,
         },
         "quality_gates": gates,
         "passed": all(gates.values()),
@@ -130,6 +186,11 @@ def main() -> int:
     parser.add_argument("--sft", type=Path, default=DEFAULT_SFT)
     parser.add_argument("--dpo", type=Path, default=DEFAULT_DPO)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
+    parser.add_argument(
+        "--require-second-review",
+        action="store_true",
+        help="Fail when high/critical or REL human-reviewed SFT samples lack independent second review.",
+    )
     args = parser.parse_args()
 
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
@@ -142,7 +203,11 @@ def main() -> int:
         "dpo": _schema_errors(dpo_records, validator),
     }
 
-    report = build_report(sft_records, dpo_records)
+    report = build_report(
+        sft_records,
+        dpo_records,
+        require_second_review=args.require_second_review,
+    )
     report["schema"] = {
         "valid": not schema_errors["sft"] and not schema_errors["dpo"],
         "errors": schema_errors,

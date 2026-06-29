@@ -148,6 +148,55 @@ python3 scripts/apply_phase15_review.py \
   --in-place
 ```
 
+5. 导出独立二次复核队列（建议用于进入训练前的抽检门槛）：
+
+```bash
+python3 scripts/export_phase15_second_review_queue.py
+```
+
+二审队列从 `training/phase15-sft-reviewed.jsonl` 中确定性选择：
+
+- 所有 `high` / `critical` severity 样本
+- 所有 `REL` 主类样本
+- 当前 Phase 1.5 reviewed 基线会导出 80 条二审候选
+
+产物：
+
+- `evaluation/review/phase15-sft-second-review-queue.jsonl`
+- `evaluation/review/phase15-sft-second-review-decisions.template.jsonl`
+
+6. 第二 reviewer 复制模板、填写独立二审决策，然后应用到新文件：
+
+```bash
+cp evaluation/review/phase15-sft-second-review-decisions.template.jsonl \
+   evaluation/review/phase15-sft-second-review-decisions.jsonl
+
+python3 scripts/apply_phase15_second_review.py \
+  --decisions evaluation/review/phase15-sft-second-review-decisions.jsonl \
+  --dry-run
+
+python3 scripts/apply_phase15_second_review.py \
+  --decisions evaluation/review/phase15-sft-second-review-decisions.jsonl \
+  --output training/phase15-sft-reviewed-second.jsonl
+```
+
+二审通过要求：
+
+- `second_review_decision` 为 `approve`
+- 二审 `reviewer` 非空，且默认必须不同于一审 reviewer
+- 二审 checklist 全部为 `true`
+
+7. 使用严格二审门槛审计：
+
+```bash
+python3 scripts/audit_phase15_assets.py \
+  --sft training/phase15-sft-reviewed-second.jsonl \
+  --report evaluation/review/phase15-second-reviewed-quality-report.json \
+  --require-second-review
+```
+
+未完成真实二审前，不要伪造 `phase15-sft-second-review-decisions.jsonl`；保留 queue/template 即表示“二审待执行”。
+
 ### P0 评测集统计
 
 - 合计 **26** 条 P0 seed cases（SEC 5 + PRI 5 + SAF 6 + REL 5 + Benign 5）
