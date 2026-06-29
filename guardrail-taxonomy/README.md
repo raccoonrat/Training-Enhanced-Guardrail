@@ -70,6 +70,83 @@ Phase 1.5 审计脚本当前硬门槛：
 - DPO 负例覆盖 unsafe allow、over-refusal、missing audit
 - 全量样本无重复 `sample_id` 且 schema-valid
 
+### Phase 1.5 人工审核工作流
+
+当前可执行审核闭环先覆盖 SFT 样本；DPO pair 的 schema 暂未包含 `quality.review_status`，后续如需复核 DPO，应先扩展 DPO 记录质量字段。
+
+1. 导出待审核队列和决策模板：
+
+```bash
+python3 scripts/export_phase15_review_queue.py
+```
+
+产物：
+
+- `evaluation/review/phase15-sft-review-queue.jsonl` — reviewer 阅读用队列，包含输入、标签、期望输出和审核 checklist
+- `evaluation/review/phase15-sft-review-decisions.template.jsonl` — reviewer 可填写的审核决策模板
+
+2. Reviewer 复制模板为正式决策文件并逐条填写：
+
+```bash
+cp evaluation/review/phase15-sft-review-decisions.template.jsonl \
+   evaluation/review/phase15-sft-review-decisions.jsonl
+```
+
+每条决策记录的关键字段：
+
+```json
+{
+  "sample_id": "phase15-sft-p0-sec-001-v0",
+  "review_decision": "approve",
+  "reviewer": "reviewer.name",
+  "reviewed_at": "2026-06-29T07:48:00+00:00",
+  "notes": "Labels and safe response match taxonomy and policy mapping.",
+  "checklist": {
+    "taxonomy_match": true,
+    "decision_correct": true,
+    "controls_complete": true,
+    "audit_flags_correct": true,
+    "safe_response_acceptable": true
+  }
+}
+```
+
+只有满足以下条件的样本会升级为 `human_reviewed`：
+
+- `review_decision` 为 `approve`
+- `reviewer` 非空
+- `checklist` 中所有项均为 `true`
+
+`reject`、`needs_changes` 或不完整 `approve` 都会保持 `pending_human_review`，并在 `quality.review` 中留下审核记录。
+
+3. 先 dry-run，再生成 reviewed 文件：
+
+```bash
+python3 scripts/apply_phase15_review.py \
+  --decisions evaluation/review/phase15-sft-review-decisions.jsonl \
+  --dry-run
+
+python3 scripts/apply_phase15_review.py \
+  --decisions evaluation/review/phase15-sft-review-decisions.jsonl \
+  --output training/phase15-sft-reviewed.jsonl
+```
+
+4. 审计 reviewed 文件：
+
+```bash
+python3 scripts/audit_phase15_assets.py \
+  --sft training/phase15-sft-reviewed.jsonl \
+  --report evaluation/review/phase15-reviewed-quality-report.json
+```
+
+确认 reviewed 文件 schema-valid、质量门槛通过后，如需把主 bootstrap 文件替换为审核后版本，再显式执行：
+
+```bash
+python3 scripts/apply_phase15_review.py \
+  --decisions evaluation/review/phase15-sft-review-decisions.jsonl \
+  --in-place
+```
+
 ### P0 评测集统计
 
 - 合计 **26** 条 P0 seed cases（SEC 5 + PRI 5 + SAF 6 + REL 5 + Benign 5）
