@@ -1,0 +1,13 @@
+{
+  "summary": {
+    "approve_incomplete": 104,
+    "unknown_decisions": 0
+  },
+  "unknown_decision_sample_ids": [],
+  "input": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-sft-bootstrap.jsonl",
+  "decisions": "evaluation/review/phase15-sft-review-decisions.jsonl",
+  "output": "training/phase15-sft-reviewed.jsonl",
+  "dry_run": false,
+  "schema_valid": true,
+  "schema_errors": []
+}
