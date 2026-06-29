@@ -3,7 +3,8 @@
 
 Examples:
   python scripts/run_p0.py                          # oracle self-test
-  python scripts/run_p0.py --provider baseline      # naive keyword baseline
+  python scripts/run_p0.py --provider baseline      # intentionally weak negative control
+  python scripts/run_p0.py --provider rules         # deterministic rule baseline
   python scripts/run_p0.py --provider file --predictions preds.jsonl
 """
 
