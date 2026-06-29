@@ -3,3 +3,5 @@ jsonschema>=4.20
 PyYAML>=6.0
 requests>=2.31
 python-dotenv>=1.0
+# SOCKS5 proxy support for requests (optional; needed only when using a SOCKS proxy)
+PySocks>=1.7

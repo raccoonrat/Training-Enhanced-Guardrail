@@ -131,6 +131,50 @@ python3 scripts/run_p0.py --provider openrouter \
 - `--limit N` 仅评测前 N 条，适合付费 API 控制成本。
 - 占位/缺失密钥会在调用前直接报错，不会发起网络请求。
 
+### 通过 SOCKS5 / HTTP 代理连接
+
+代理是**可配置**的，优先级：`--proxy` > `.env` 的 `OPENROUTER_PROXY` > 环境变量 `ALL_PROXY`。不配置则直连。
+
+```bash
+# 方式一：写入 .env
+#   OPENROUTER_PROXY=socks5h://127.0.0.1:1080
+python3 scripts/run_p0.py --provider openrouter --limit 5
+
+# 方式二：命令行临时指定
+python3 scripts/run_p0.py --provider openrouter --proxy socks5h://127.0.0.1:1080 --limit 5
+
+# 显式直连（忽略 .env 代理）
+python3 scripts/run_p0.py --provider openrouter --proxy none
+```
+
+- 推荐使用 `socks5h://`（DNS 经代理解析）；`socks5://` 为本地解析。HTTP 代理用 `http://host:port`。
+- SOCKS 代理需要 `PySocks`（已在 `requirements.txt`，或 `pip install 'requests[socks]'`）；缺失时会给出明确报错。
+- 编程调用：`build_provider(proxy="socks5h://127.0.0.1:1080")`。
+
+### 上游限流（HTTP 429）处理
+
+`gpt-oss-safeguard-20b` 在 OpenRouter 上可能经 Groq 路由，免费/共享配额易触发 **429 rate limit**。provider 已内置：
+
+- **自动重试**：429 / 500 / 502 / 503 / 504，指数退避（默认最多 6 次，基础间隔 5s），尊重 `Retry-After` 响应头
+- **请求间隔**：成功调用之间默认休眠 3s（`OPENROUTER_REQUEST_DELAY`），降低连续 26 条用例时的触发概率
+- **磁盘缓存**：已成功的 case 写入 `evaluation/cache/`，重跑不会重复计费
+
+```bash
+# 建议：先小规模试跑
+python3 scripts/run_p0.py --provider openrouter --proxy socks5h://127.0.0.1:1080 --limit 3
+
+# 限流严重时加大间隔与重试
+python3 scripts/run_p0.py --provider openrouter \
+    --request-delay 5 --retry-delay 10 --max-retries 8 --limit 10
+
+# 或在 .env 中配置
+# OPENROUTER_REQUEST_DELAY=5
+# OPENROUTER_RETRY_BASE_DELAY=10
+# OPENROUTER_MAX_RETRIES=8
+```
+
+若持续 429，可在 [OpenRouter Integrations](https://openrouter.ai/settings/integrations) 绑定自有 Groq API Key 以提升配额。
+
 接入其他真实 Guardrail LLM 时，仿照 `p0eval/openrouter_provider.py` 新增一个 provider 即可，judge 与 scoring 无需改动。
 
 ### 指标与 Release Gate

@@ -117,8 +117,19 @@ def main(argv: List[str] | None = None) -> int:
                         help="Predictions JSONL (required when --provider file).")
     parser.add_argument("--model", type=str, default=None,
                         help="Model slug for --provider openrouter (default from .env or gpt-oss-safeguard-20b).")
+    parser.add_argument("--proxy", type=str, default=None,
+                        help="Proxy URL for --provider openrouter, e.g. socks5h://127.0.0.1:1080 "
+                             "(default from OPENROUTER_PROXY / ALL_PROXY in .env).")
     parser.add_argument("--no-cache", action="store_true",
                         help="Disable on-disk response cache for --provider openrouter.")
+    parser.add_argument("--max-retries", type=int, default=None,
+                        help="Max retries on 429/5xx for --provider openrouter (default from .env or 6).")
+    parser.add_argument("--retry-delay", type=float, default=None,
+                        help="Base retry backoff seconds for --provider openrouter (default from .env or 5).")
+    parser.add_argument("--request-delay", type=float, default=None,
+                        help="Min seconds between OpenRouter calls (default from .env or 5). Use 0 to disable.")
+    parser.add_argument("--parse-retries", type=int, default=None,
+                        help="Retries when model returns truncated/invalid JSON (default from .env or 2).")
     parser.add_argument("--limit", type=int, default=None,
                         help="Evaluate only the first N cases (useful for paid APIs).")
     parser.add_argument("--report", type=Path, help="Optional path to write JSON report.")
@@ -134,7 +145,15 @@ def main(argv: List[str] | None = None) -> int:
         provider = file_provider(args.predictions)
     elif args.provider == "openrouter":
         from .openrouter_provider import build_provider
-        provider = build_provider(model=args.model, use_cache=not args.no_cache)
+        provider = build_provider(
+            model=args.model,
+            proxy=args.proxy,
+            use_cache=not args.no_cache,
+            max_retries=args.max_retries,
+            retry_base_delay=args.retry_delay,
+            request_delay=args.request_delay,
+            parse_retries=args.parse_retries,
+        )
     else:
         provider = PROVIDERS[args.provider]
 
