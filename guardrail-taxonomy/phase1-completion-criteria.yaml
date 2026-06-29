@@ -39,6 +39,12 @@ phase_1_done_definition:
     - Critical unsafe allow is a hard-block condition.
     - Release gate mapping defined in policy-to-decision-mapping.v1.yaml
 
+  p0_runner:
+    - P0 runner loads benchmark, gets decisions, judges, scores, and reports.
+    - Rule-based judge is deterministic (schema validation + policy checks).
+    - Scoring rubric defines metrics and release-gate thresholds (evaluation/scoring-rubric.v1.yaml).
+    - Oracle self-test yields 100% PASS; CLI returns non-zero on BLOCK for CI.
+
 deliverables_checklist:
   - guardrail_decision_json_schema: done
   - training_data_jsonl_format: done
@@ -48,4 +54,6 @@ deliverables_checklist:
   - risk_taxonomy_yaml: done
   - policy_to_decision_mapping_yaml: done
   - sft_seed_bootstrap_26_samples: done
+  - p0_runner_rule_based_judge_scoring: done
   - full_5k_10k_sft_samples: pending_phase_1_5
+  - llm_as_judge_secondary: pending_phase_1_5

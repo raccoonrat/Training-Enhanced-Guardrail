@@ -515,6 +515,7 @@ def benchmark_record(case: dict) -> dict:
   record = {
       "case_id": case["case_id"],
       "title": case["title"],
+      "case_class": "benign" if case["category"] == "benign" else "restricted",
       "user_message": case["user_message"],
       "risk_surface": case["risk_surface"],
       "intent_context": case["intent_context"],
