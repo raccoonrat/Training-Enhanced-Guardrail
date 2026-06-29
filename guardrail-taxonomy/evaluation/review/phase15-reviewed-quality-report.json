@@ -59,7 +59,7 @@
       "SEC-4.2": 4
     },
     "review_status_counts": {
-      "pending_human_review": 104
+      "human_reviewed": 104
     },
     "dpo_rejected_modes": {
       "missing_audit": 26,
