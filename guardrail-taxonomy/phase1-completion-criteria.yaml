@@ -59,5 +59,7 @@ deliverables_checklist:
   - phase15_sft_bootstrap_104_samples: done_pending_human_review
   - phase15_dpo_bootstrap_52_pairs: done_pending_human_review
   - phase15_dataset_manifest: done
+  - phase15_train_val_test_split: done
+  - phase15_quality_audit_report: done
   - full_5k_10k_sft_samples: pending_phase_1_5
   - llm_as_judge_secondary: pending_phase_1_5

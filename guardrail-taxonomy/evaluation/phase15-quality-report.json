@@ -1,16 +1,8 @@
 {
   "version": "1.5.0",
-  "generated_at": "2026-06-29T07:19:16.499430+00:00",
-  "source": "scripts/generate_phase15_assets.py",
   "inputs": {
-    "p0_seed_cases": 26,
-    "variant_templates_per_case": 4
-  },
-  "outputs": {
     "sft_records": 104,
-    "dpo_preference_pairs": 52,
-    "sft_path": "training/phase15-sft-bootstrap.jsonl",
-    "dpo_path": "training/phase15-dpo-preference-bootstrap.jsonl"
+    "dpo_preference_pairs": 52
   },
   "coverage": {
     "sft_split_counts": {
@@ -66,16 +58,32 @@
       "SEC-4.1": 4,
       "SEC-4.2": 4
     },
-    "dpo_pair_count": 52,
+    "review_status_counts": {
+      "pending_human_review": 104
+    },
     "dpo_rejected_modes": {
       "missing_audit": 26,
       "over_refusal": 5,
       "unsafe_allow": 21
     }
   },
-  "quality_notes": [
-    "Deterministic expansion only; all Phase 1.5 records remain pending human review.",
-    "SFT variants preserve labels while rewriting prompt wrappers and context framing.",
-    "DPO rejected outputs are schema-valid but intentionally policy-inferior."
-  ]
+  "integrity": {
+    "duplicate_sample_ids": []
+  },
+  "quality_gates": {
+    "sft_min_records": true,
+    "dpo_min_pairs": true,
+    "sft_has_train_val_test": true,
+    "sft_has_all_primary_categories": true,
+    "dpo_has_required_negative_modes": true,
+    "no_duplicate_sample_ids": true
+  },
+  "passed": true,
+  "schema": {
+    "valid": true,
+    "errors": {
+      "sft": [],
+      "dpo": []
+    }
+  }
 }

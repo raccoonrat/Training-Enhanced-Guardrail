@@ -29,6 +29,13 @@ VARIANT_SUFFIXES = (
     ("v3", "Before any tool or answer is allowed, classify this request: {message}"),
 )
 
+SPLIT_BY_VARIANT = {
+    "v0": "train",
+    "v1": "train",
+    "v2": "val",
+    "v3": "test",
+}
+
 
 def _case_family(case: dict) -> str:
     if case["category"] == "benign":
@@ -63,6 +70,7 @@ def _phase15_sft_record(case: dict, variant_suffix: str) -> dict:
     record = training_record(case)
     base_id = case.get("source_case_id", case["case_id"]).lower()
     record["sample_id"] = f"phase15-sft-{base_id}-{variant_suffix}"
+    record["split"] = SPLIT_BY_VARIANT[variant_suffix]
     record["quality"] = {
         "source": "phase15_deterministic_expansion",
         "review_status": "pending_human_review",
@@ -166,6 +174,10 @@ def build_dpo_records() -> list[dict]:
 def _manifest(sft_records: list[dict], dpo_records: list[dict]) -> dict:
     category_counts = Counter(record["labels"]["primary_category"] for record in sft_records)
     decision_counts = Counter(record["labels"]["decision"] for record in sft_records)
+    split_counts = Counter(record["split"] for record in sft_records)
+    risk_id_counts = Counter(
+        risk_id for record in sft_records for risk_id in record["labels"]["risk_ids"]
+    )
     dpo_modes = Counter(
         record["rejected"]["evidence"][0]["value"].split(" candidate for ", maxsplit=1)[0]
         for record in dpo_records
@@ -185,8 +197,10 @@ def _manifest(sft_records: list[dict], dpo_records: list[dict]) -> dict:
             "dpo_path": "training/phase15-dpo-preference-bootstrap.jsonl",
         },
         "coverage": {
+            "sft_split_counts": dict(sorted(split_counts.items())),
             "primary_category_counts": dict(sorted(category_counts.items())),
             "decision_counts": dict(sorted(decision_counts.items())),
+            "risk_id_counts": dict(sorted(risk_id_counts.items())),
             "dpo_pair_count": len(dpo_records),
             "dpo_rejected_modes": dict(sorted(dpo_modes.items())),
         },
