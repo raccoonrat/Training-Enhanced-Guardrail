@@ -111,10 +111,16 @@ def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run the P0 guardrail evaluation suite.")
     parser.add_argument("--benchmark", type=Path, default=DEFAULT_BENCHMARK,
                         help="Path to benchmark JSONL (default: p0-seed-set.jsonl).")
-    parser.add_argument("--provider", choices=list(PROVIDERS.keys()) + ["file"],
+    parser.add_argument("--provider", choices=list(PROVIDERS.keys()) + ["file", "openrouter"],
                         default="oracle", help="Decision provider.")
     parser.add_argument("--predictions", type=Path,
                         help="Predictions JSONL (required when --provider file).")
+    parser.add_argument("--model", type=str, default=None,
+                        help="Model slug for --provider openrouter (default from .env or gpt-oss-safeguard-20b).")
+    parser.add_argument("--no-cache", action="store_true",
+                        help="Disable on-disk response cache for --provider openrouter.")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Evaluate only the first N cases (useful for paid APIs).")
     parser.add_argument("--report", type=Path, help="Optional path to write JSON report.")
     parser.add_argument("--format", choices=["console", "json"], default="console",
                         help="Stdout format.")
@@ -126,10 +132,15 @@ def main(argv: List[str] | None = None) -> int:
         if not args.predictions:
             parser.error("--predictions is required when --provider file")
         provider = file_provider(args.predictions)
+    elif args.provider == "openrouter":
+        from .openrouter_provider import build_provider
+        provider = build_provider(model=args.model, use_cache=not args.no_cache)
     else:
         provider = PROVIDERS[args.provider]
 
     cases = load_cases(args.benchmark)
+    if args.limit is not None:
+        cases = cases[: args.limit]
     results = run(cases, provider)
     report = build_report(results)
 

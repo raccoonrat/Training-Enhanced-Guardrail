@@ -1,0 +1,19 @@
+# Secrets / local env (never commit)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Evaluation artifacts
+guardrail-taxonomy/evaluation/cache/
+guardrail-taxonomy/evaluation/reports/
+
+# OS / editor
+.DS_Store
+*.swp

@@ -95,7 +95,43 @@ python3 scripts/run_p0.py --provider file --predictions preds.jsonl \
 
 ### Provider 接口
 
-Provider 是 `case(dict) -> decision(dict)` 的可插拔适配器：`oracle`（期望输出，自测）、`baseline`（关键词基线）、`file`（外部预测）。接入真实 Guardrail LLM 时新增一个 provider 即可。
+Provider 是 `case(dict) -> decision(dict)` 的可插拔适配器：
+
+| provider | 说明 |
+|----------|------|
+| `oracle` | 返回期望输出，用于管线自测 |
+| `baseline` | 朴素关键词基线 |
+| `file` | 读取外部预测 JSONL |
+| `openrouter` | 调用 OpenRouter 上的 **OpenAI gpt-oss-safeguard-20b** 安全推理模型 |
+
+### 使用真实安全模型（OpenRouter / gpt-oss-safeguard）
+
+`gpt-oss-safeguard-20b` 是 OpenAI 开源的 policy-conditioned 安全推理模型，天然适配 Guardrail：把本仓库的 taxonomy 决策契约作为 policy 注入，模型按策略输出结构化决策。
+
+1. 配置密钥（密钥从 `.env` 读取，`.env` 已加入 `.gitignore`，**不会提交**）：
+
+```bash
+cp .env.example .env          # 在仓库根目录
+# 编辑 .env，填入真实的 OPENROUTER_API_KEY=sk-or-...
+```
+
+2. 安装依赖并运行：
+
+```bash
+pip install -r guardrail-taxonomy/requirements.txt
+python3 scripts/run_p0.py --provider openrouter --limit 5      # 先小规模试跑（计费）
+python3 scripts/run_p0.py --provider openrouter \
+    --model openai/gpt-oss-safeguard-20b \
+    --report evaluation/reports/safeguard-run.json
+```
+
+说明：
+- CLI 从 `.env` 读取 `OPENROUTER_API_KEY`；编程调用可通过 `build_provider(api_key=...)` 传入。模型可由 `--model` 或 `.env` 的 `OPENROUTER_MODEL` 指定。
+- 响应默认缓存在 `evaluation/cache/`（已 gitignore），避免重复计费；`--no-cache` 可关闭。
+- `--limit N` 仅评测前 N 条，适合付费 API 控制成本。
+- 占位/缺失密钥会在调用前直接报错，不会发起网络请求。
+
+接入其他真实 Guardrail LLM 时，仿照 `p0eval/openrouter_provider.py` 新增一个 provider 即可，judge 与 scoring 无需改动。
 
 ### 指标与 Release Gate
 

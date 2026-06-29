@@ -1,0 +1,5 @@
+# Phase 1 P0 evaluation toolkit dependencies
+jsonschema>=4.20
+PyYAML>=6.0
+requests>=2.31
+python-dotenv>=1.0
