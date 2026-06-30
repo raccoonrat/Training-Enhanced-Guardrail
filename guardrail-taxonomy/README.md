@@ -288,7 +288,10 @@ python3 scripts/run_p0.py --provider openrouter \
 
 说明：
 - CLI 从 `.env` 读取 `OPENROUTER_API_KEY`；编程调用可通过 `build_provider(api_key=...)` 传入。模型可由 `--model` 或 `.env` 的 `OPENROUTER_MODEL` 指定。
-- 响应默认缓存在 `evaluation/cache/`（已 gitignore），避免重复计费；`--no-cache` 可关闭。
+- 响应默认缓存在 `evaluation/cache/`（已 gitignore），避免重复计费。
+- `--no-cache`：不读不写缓存，26 条全量重请求（易触发 Groq 429，仅在你必须完全刷新时使用）。
+- `--refresh-cache`：忽略已有缓存，但成功响应仍写入缓存，适合限流中断后续跑。
+- 默认（不加 flag）：优先读缓存，命中则不再请求 API。
 - `--limit N` 仅评测前 N 条，适合付费 API 控制成本。
 - 占位/缺失密钥会在调用前直接报错，不会发起网络请求。
 
@@ -316,7 +319,7 @@ python3 scripts/run_p0.py --provider openrouter --proxy none
 
 `gpt-oss-safeguard-20b` 在 OpenRouter 上可能经 Groq 路由，免费/共享配额易触发 **429 rate limit**。provider 已内置：
 
-- **自动重试**：429 / 500 / 502 / 503 / 504，指数退避（默认最多 6 次，基础间隔 5s），尊重 `Retry-After` 响应头
+- **自动重试**：429 / 500 / 502 / 503 / 504，指数退避（默认最多 6 次，基础间隔 5s，单次等待上限 120s），尊重 `Retry-After` 响应头
 - **请求间隔**：成功调用之间默认休眠 3s（`OPENROUTER_REQUEST_DELAY`），降低连续 26 条用例时的触发概率
 - **磁盘缓存**：已成功的 case 写入 `evaluation/cache/`，重跑不会重复计费
 

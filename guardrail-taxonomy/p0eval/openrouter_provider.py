@@ -34,6 +34,7 @@ DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 DEFAULT_MODEL = "openai/gpt-oss-safeguard-20b"
 DEFAULT_MAX_RETRIES = 6
 DEFAULT_RETRY_BASE_DELAY = 5.0
+DEFAULT_RETRY_MAX_DELAY = 120.0
 DEFAULT_REQUEST_DELAY = 5.0
 DEFAULT_PARSE_RETRIES = 2
 RETRYABLE_STATUS = {429, 500, 502, 503, 504}
@@ -662,6 +663,7 @@ def _post_with_retries(
     proxies: Optional[Dict[str, str]],
     max_retries: int,
     retry_base_delay: float,
+    retry_max_delay: float = DEFAULT_RETRY_MAX_DELAY,
     case_id: str = "",
 ) -> requests.Response:
     """POST with exponential backoff on upstream rate limits / transient errors."""
@@ -682,9 +684,10 @@ def _post_with_retries(
             hint = ""
             if resp.status_code == 429:
                 hint = (
-                    " Hint: upstream rate limit — try --limit 5, increase "
-                    "--request-delay / OPENROUTER_REQUEST_DELAY, or bind your own "
-                    "provider key at https://openrouter.ai/settings/integrations"
+                    " Hint: upstream rate limit (Groq) — remove --no-cache to reuse "
+                    "evaluation/cache/, use --refresh-cache for resume-friendly re-run, "
+                    "increase --request-delay, or bind your own provider key at "
+                    "https://openrouter.ai/settings/integrations"
                 )
             elif resp.status_code == 403:
                 hint = (
@@ -698,6 +701,7 @@ def _post_with_retries(
         wait = _parse_retry_after(resp)
         if wait is None:
             wait = retry_base_delay * (2 ** attempt)
+        wait = min(wait, retry_max_delay)
         label = case_id or "request"
         print(
             f"[openrouter] {label}: HTTP {resp.status_code}, retry {attempt + 1}/{max_retries} "
@@ -739,9 +743,12 @@ def build_provider(
     api_key: Optional[str] = None,
     proxy: Optional[str] = None,
     use_cache: bool = True,
+    use_cache_read: Optional[bool] = None,
+    use_cache_write: Optional[bool] = None,
     timeout: int = 90,
     max_retries: Optional[int] = None,
     retry_base_delay: Optional[float] = None,
+    retry_max_delay: Optional[float] = None,
     request_delay: Optional[float] = None,
     parse_retries: Optional[int] = None,
 ) -> Callable[[dict], dict]:
@@ -769,6 +776,11 @@ def build_provider(
     parse_retries = parse_retries if parse_retries is not None else _env_int(
         "OPENROUTER_PARSE_RETRIES", DEFAULT_PARSE_RETRIES
     )
+    retry_max_delay = retry_max_delay if retry_max_delay is not None else _env_float(
+        "OPENROUTER_RETRY_MAX_DELAY", DEFAULT_RETRY_MAX_DELAY
+    )
+    cache_read = use_cache if use_cache_read is None else use_cache_read
+    cache_write = use_cache if use_cache_write is None else use_cache_write
     if not api_key or "REPLACE_ME" in api_key or api_key.endswith("xxxx"):
         raise RuntimeError(
             "OPENROUTER_API_KEY is missing or a placeholder. "
@@ -791,14 +803,18 @@ def build_provider(
         "X-Title": "Guardrail P0 Evaluation",
     }
     system_policy = _system_policy()
-    if use_cache:
+    if cache_read or cache_write:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     last_call_at: List[float] = [0.0]
 
     def _provider(case: dict) -> dict:
         cache_path = CACHE_DIR / f"{_cache_key(case, model)}.json"
-        if use_cache and cache_path.exists():
+        if cache_read and cache_path.exists():
+            print(
+                f"[openrouter] {case.get('case_id', '')}: cache hit",
+                file=sys.stderr,
+            )
             raw = json.loads(cache_path.read_text(encoding="utf-8"))
             return _normalize(raw, case)
 
@@ -838,6 +854,7 @@ def build_provider(
                 proxies=proxies,
                 max_retries=max_retries,
                 retry_base_delay=retry_base_delay,
+                retry_max_delay=retry_max_delay,
                 case_id=case.get("case_id", ""),
             )
             last_call_at[0] = time.monotonic()
@@ -858,7 +875,7 @@ def build_provider(
                 f"{last_parse_error}"
             )
 
-        if use_cache:
+        if cache_write:
             cache_path.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
         return _normalize(raw, case)
 
