@@ -5,7 +5,8 @@ No imports from guardrail-taxonomy / p0eval / taxonomy assets.
 Uses Python stdlib only; SOCKS5 requires optional PySocks (pip install PySocks).
 
 Verifies the full network path: proxy TCP reachability, DNS, TCP peer to
-OpenRouter, egress IP (direct vs via proxy), then a minimal chat/completions probe.
+OpenRouter, egress IP (direct vs via proxy), API key auth, then a minimal
+chat/completions probe (Hello, no response_format).
 
 Examples:
   python3 scripts/openrouter_saniticheck.py
@@ -101,15 +102,104 @@ def _format_error(status: int, body: str) -> str:
     err = payload.get("error", payload)
     if isinstance(err, dict):
         parts = [f"HTTP {status}"]
+        if err.get("code") is not None:
+            parts.append(f"code={err['code']}")
         if err.get("message"):
             parts.append(str(err["message"]))
         meta = err.get("metadata") or {}
         if meta.get("provider_name"):
             parts.append(f"provider={meta['provider_name']}")
+        reasons = meta.get("reasons")
+        if reasons:
+            parts.append(f"reasons={reasons}")
+        flagged = meta.get("flagged_input")
+        if flagged:
+            parts.append(f"flagged_input={str(flagged)[:120]}")
         if meta.get("raw"):
             parts.append(str(meta["raw"])[:200])
         return " | ".join(parts)
     return f"HTTP {status}: {str(err)[:400]}"
+
+
+def _api_headers(api_key: str) -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "X-Title": "OpenRouter Sanity Check",
+    }
+
+
+def _probe_auth_key(
+    base_url: str,
+    *,
+    api_key: str,
+    proxy: Optional[str],
+    timeout: int,
+) -> tuple[bool, int, str, float, Optional[dict]]:
+    url = f"{base_url.rstrip('/')}/auth/key"
+    started = time.monotonic()
+    status, raw = _https_request(
+        url,
+        headers=_api_headers(api_key),
+        proxy=proxy,
+        timeout=timeout,
+    )
+    elapsed = time.monotonic() - started
+    if status != 200:
+        return False, status, raw, elapsed, None
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return False, status, raw, elapsed, None
+    data = payload.get("data", payload)
+    return True, status, raw, elapsed, data
+
+
+def _probe_model_chat(
+    base_url: str,
+    *,
+    model: str,
+    api_key: str,
+    proxy: Optional[str],
+    timeout: int,
+) -> tuple[int, str, float]:
+    url = f"{base_url.rstrip('/')}/chat/completions"
+    body = {
+        "model": model,
+        "messages": [{"role": "user", "content": "Hello"}],
+        "max_tokens": 8,
+        "temperature": 0,
+    }
+    started = time.monotonic()
+    status, raw = _https_request(
+        url,
+        method="POST",
+        headers=_api_headers(api_key),
+        body=json.dumps(body).encode("utf-8"),
+        proxy=proxy,
+        timeout=timeout,
+    )
+    return status, raw, time.monotonic() - started
+
+
+def _print_api_hints(status: int, raw: str, *, auth_ok: bool, model: str) -> None:
+    if status == 401:
+        print("  hint     : invalid or missing API key.")
+    elif status == 402:
+        print("  hint     : insufficient OpenRouter credits.")
+    elif status == 403:
+        if auth_ok:
+            print(
+                "  hint     : network + API key OK; this model request was blocked "
+                f"({model}). Check credits/tier, provider availability, or moderation."
+            )
+        else:
+            print("  hint     : request forbidden — check API key permissions or moderation.")
+    elif status == 429:
+        print(
+            "  hint     : rate limited — retry later or bind provider keys at "
+            "https://openrouter.ai/settings/integrations."
+        )
 
 
 def _addr_str(addr: tuple) -> str:
@@ -462,6 +552,7 @@ def run_check(
     timeout: int,
     compare_direct: bool,
     require_proxy_active: bool,
+    skip_model_probe: bool,
 ) -> int:
     print("OpenRouter sanity check")
     print(f"  base_url : {base_url}")
@@ -490,69 +581,60 @@ def run_check(
             print("  proxy.strict   : PASS — proxy path verified")
 
     print("\n--- OpenRouter API probe ---")
-    url = f"{base_url.rstrip('/')}/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "X-Title": "OpenRouter Sanity Check",
-    }
-    body = {
-        "model": model,
-        "messages": [
-            {
-                "role": "user",
-                "content": (
-                    "Connectivity probe only. Reply with exactly one JSON object: "
-                    '{"status":"ok"}'
-                ),
-            }
-        ],
-        "temperature": 0,
-        "max_tokens": 32,
-        "response_format": {"type": "json_object"},
-    }
-
-    started = time.monotonic()
-    status, raw = _https_request(
-        url,
-        method="POST",
-        headers=headers,
-        body=json.dumps(body).encode("utf-8"),
-        proxy=proxy,
-        timeout=timeout,
-    )
-    elapsed = time.monotonic() - started
-
     print(f"  route    : {'via proxy' if proxy else 'direct'}")
+
+    auth_ok, auth_status, auth_raw, auth_elapsed, auth_data = _probe_auth_key(
+        base_url, api_key=api_key, proxy=proxy, timeout=timeout
+    )
+    print("  auth.key :", end=" ")
+    if auth_ok and auth_data:
+        label = auth_data.get("label", "?")
+        usage = auth_data.get("usage")
+        limit = auth_data.get("limit")
+        usage_str = f"{usage}/{limit}" if usage is not None and limit is not None else "?"
+        print(f"PASS ({auth_status}, {auth_elapsed:.2f}s, label={label}, usage={usage_str})")
+    else:
+        print(f"FAIL ({auth_status}, {auth_elapsed:.2f}s)")
+        print(f"  detail   : {_format_error(auth_status, auth_raw)}")
+        _print_api_hints(auth_status, auth_raw, auth_ok=False, model=model)
+        print("\n  result   : FAIL (API auth)")
+        return 1
+
+    if skip_model_probe:
+        print(f"  model    : skipped (--skip-model-probe)")
+        print("\n  result   : PASS (network + API auth)")
+        return 0
+
+    status, raw, elapsed = _probe_model_chat(
+        base_url, model=model, api_key=api_key, proxy=proxy, timeout=timeout
+    )
+    print(f"  model    : {model}")
     print(f"  latency  : {elapsed:.2f}s")
     print(f"  http     : {status}")
 
     if status != 200:
-        print("  result   : FAIL")
+        print("  model    : FAIL")
         print(f"  detail   : {_format_error(status, raw)}")
-        if status == 429:
-            print(
-                "  hint     : Groq upstream rate limit — retry later, bind a Groq key "
-                "at https://openrouter.ai/settings/integrations."
-            )
-        elif status == 403:
-            print("  hint     : upstream ToS/content policy block on probe payload.")
+        _print_api_hints(status, raw, auth_ok=True, model=model)
+        print("\n  result   : PARTIAL — network + API auth OK, model probe failed")
         return 1
 
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
-        print("  result   : FAIL")
+        print("  model    : FAIL")
         print(f"  detail   : non-JSON response: {raw[:300]}")
+        print("\n  result   : PARTIAL — network + API auth OK, model probe failed")
         return 1
 
     message = payload.get("choices", [{}])[0].get("message", {})
     content = (message.get("content") or "")[:200]
     upstream_model = payload.get("model", model)
-    print("  result   : PASS")
+    print("  model    : PASS")
     print(f"  upstream : {upstream_model}")
     if content:
         print(f"  content  : {content}")
+    print("\n  result   : PASS")
     return 0
 
 
@@ -583,6 +665,11 @@ def main() -> int:
         action="store_true",
         help="Fail if proxy egress IP equals direct egress (strict SOCKS verification)",
     )
+    parser.add_argument(
+        "--skip-model-probe",
+        action="store_true",
+        help="Only verify network path + API key auth; skip chat/completions model probe",
+    )
     parser.add_argument("--env-file", type=Path, help="Optional .env path (default: search upward)")
     args = parser.parse_args()
 
@@ -608,6 +695,7 @@ def main() -> int:
         timeout=args.timeout,
         compare_direct=not args.no_compare_direct,
         require_proxy_active=args.require_proxy_active,
+        skip_model_probe=args.skip_model_probe,
     )
 
 
