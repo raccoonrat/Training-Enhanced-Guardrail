@@ -123,6 +123,11 @@ def apply_second_reviews(
         checklist_passed = _checklist_passed(decision)
         quality = record.setdefault("quality", {})
 
+        if second_decision == APPROVE and not decision.get("reviewed_at", "").strip():
+            raise ValueError(
+                f"{sample_id}: second_review_decision=approve requires non-empty reviewed_at"
+            )
+
         if second_decision == APPROVE and independent and checklist_passed:
             quality["second_review"] = _metadata(decision, "second_reviewed", independent)
             _set_second_review_tag(record, "second_reviewed")

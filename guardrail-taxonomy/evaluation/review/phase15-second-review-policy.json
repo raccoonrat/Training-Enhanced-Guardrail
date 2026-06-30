@@ -3,6 +3,11 @@
   "first_reviewer": "wab",
   "second_reviewer": "wyh",
   "scope": "full_80",
+  "status": "complete",
+  "completed_at": "2026-06-30",
+  "second_reviewed_count": 80,
+  "challenge_count": 0,
+  "artifact": "training/phase15-sft-reviewed-second.jsonl",
   "selection_rules": [
     "severity:high",
     "severity:critical",

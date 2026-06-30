@@ -229,6 +229,8 @@ python3 scripts/audit_phase15_assets.py \
 
 未完成 `wyh` 的真实二审前，不要在 decisions 中填写虚假的 `reviewed_at`；全 `approve` 但无时间戳不会被 apply 脚本接受。
 
+**二审判收（2026-06-30）**：`wyh` 完成 80/80，`training/phase15-sft-reviewed-second.jsonl` 已生成，严格审计 PASS。训练用 SFT 以该文件为准；其余 24 条 medium/low 非 REL 样本仅一审、无需二审。
+
 ### P0 评测集统计
 
 - 合计 **26** 条 P0 seed cases（SEC 5 + PRI 5 + SAF 6 + REL 5 + Benign 5）

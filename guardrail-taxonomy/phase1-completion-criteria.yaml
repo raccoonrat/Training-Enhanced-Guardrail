@@ -56,12 +56,13 @@ deliverables_checklist:
   - sft_seed_bootstrap_26_samples: done
   - p0_runner_rule_based_judge_scoring: done
   - openrouter_gpt_oss_safeguard_provider: done
-  - phase15_sft_bootstrap_104_samples: done_pending_human_review
-  - phase15_dpo_bootstrap_52_pairs: done_pending_human_review
+  - phase15_sft_bootstrap_104_samples: done
+  - phase15_dpo_bootstrap_52_pairs: done
   - phase15_dataset_manifest: done
   - phase15_train_val_test_split: done
   - phase15_quality_audit_report: done
   - phase15_sft_human_review_workflow: done
   - phase15_sft_second_review_workflow: done
+  - phase15_sft_second_review_80_of_80: done
   - full_5k_10k_sft_samples: pending_phase_1_5
   - llm_as_judge_secondary: pending_phase_1_5

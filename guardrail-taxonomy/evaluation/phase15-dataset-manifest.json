@@ -74,8 +74,26 @@
     }
   },
   "quality_notes": [
-    "Deterministic expansion only; all Phase 1.5 records remain pending human review.",
+    "Deterministic expansion from 26 P0 seed cases x 4 variants.",
     "SFT variants preserve labels while rewriting prompt wrappers and context framing.",
     "DPO rejected outputs are schema-valid but intentionally policy-inferior."
-  ]
+  ],
+  "review_lineage": {
+    "first_review": {
+      "status": "complete",
+      "reviewer": "wab",
+      "records": 104,
+      "artifact": "training/phase15-sft-reviewed.jsonl"
+    },
+    "second_review": {
+      "status": "complete",
+      "reviewer": "wyh",
+      "required_records": 80,
+      "second_reviewed_records": 80,
+      "artifact": "training/phase15-sft-reviewed-second.jsonl",
+      "audit_report": "evaluation/review/phase15-second-reviewed-quality-report.json",
+      "strict_audit_passed": true
+    },
+    "training_ready_sft": "training/phase15-sft-reviewed-second.jsonl"
+  }
 }
