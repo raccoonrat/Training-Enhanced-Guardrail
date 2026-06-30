@@ -1,0 +1,82 @@
+{
+  "version": "1.5.0-freeze.1",
+  "frozen_at": "2026-06-30T16:54:00+08:00",
+  "scope": "phase15_bootstrap_sft_dpo_training_ready",
+  "summary": {
+    "sft_records": 104,
+    "dpo_preference_pairs": 52,
+    "sft_first_review": {
+      "reviewer": "wab",
+      "records": 104,
+      "status": "complete"
+    },
+    "sft_second_review": {
+      "reviewer": "wyh",
+      "records": 80,
+      "status": "complete"
+    },
+    "dpo_review": {
+      "reviewer": "wab",
+      "records": 52,
+      "status": "complete"
+    },
+    "strict_sft_dpo_audit": "PASS",
+    "openrouter_p0_release_gate": "PASS"
+  },
+  "artifacts": {
+    "training_ready_sft": {
+      "path": "training/phase15-sft-reviewed-second.jsonl",
+      "bytes": 253291,
+      "sha256": "8857b2835c41b416c2a272f039b424bccc4716d974f87538e4a0b4804487808f"
+    },
+    "training_ready_dpo": {
+      "path": "training/phase15-dpo-preference-reviewed.jsonl",
+      "bytes": 106817,
+      "sha256": "44d236da2284e7deb9dd9ce50eef1ef38b45bc4733cededb9a73e8cc77aa122b"
+    },
+    "dataset_manifest": {
+      "path": "evaluation/phase15-dataset-manifest.json",
+      "bytes": 3805,
+      "sha256": "c2060cc6cdd540190a54020154f7ab0c188e66cc4042aeb58f47e8207bc66c98"
+    },
+    "sft_second_review_audit": {
+      "path": "evaluation/review/phase15-second-reviewed-quality-report.json",
+      "bytes": 2303,
+      "sha256": "f4a9c4d7fc75dfd8b3533a92e6368481f1d92ee7d9b4bae3ee315c0001d56c02"
+    },
+    "sft_dpo_strict_audit": {
+      "path": "evaluation/review/phase15-sft-dpo-reviewed-quality-report.json",
+      "bytes": 2634,
+      "sha256": "a07005214d95e017387fd9b6d4e9b506294ad6fee7a96fab44b97f5fde712572"
+    },
+    "sft_second_review_apply_report": {
+      "path": "evaluation/review/phase15-second-review-apply-report.json",
+      "bytes": 575,
+      "sha256": "610194ecadb1492f38d9c8f82a0745331b145ac7c58e42a44203a5ceb280cfd3"
+    },
+    "dpo_review_apply_report": {
+      "path": "evaluation/review/phase15-dpo-review-apply-report.json",
+      "bytes": 457,
+      "sha256": "7fdfb290e2312ce3d8283b0e711a570dca3f3410e1566ceeed3efa74698daaa6"
+    },
+    "openrouter_p0_regression": {
+      "path": "evaluation/reports/openrouter-phase15-sft-dpo-ready.json",
+      "bytes": 9625,
+      "sha256": "4627e1dfaa82b6dd660cff78a9a7f7cab93f78e393442e22d86a124811a1998d"
+    },
+    "sft_second_review_decisions": {
+      "path": "evaluation/review/phase15-sft-second-review-decisions.jsonl",
+      "bytes": 27212,
+      "sha256": "3e9ef4a786cebcea108cdf942a10561fc0304c8ef0ff395157723f37019fec6f"
+    },
+    "dpo_review_decisions": {
+      "path": "evaluation/review/phase15-dpo-review-decisions.jsonl",
+      "bytes": 16774,
+      "sha256": "c8be313696b911a3a01f27c0d36c9b932f7fcf2ca6c5f6c1195d31e1f088153f"
+    }
+  },
+  "next_scope": {
+    "full_5k_10k_sft_samples": "pending_phase_1_5",
+    "llm_as_judge_secondary": "pending_phase_1_5"
+  }
+}

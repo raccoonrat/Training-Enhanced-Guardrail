@@ -108,5 +108,29 @@
     },
     "training_ready_sft": "training/phase15-sft-reviewed-second.jsonl",
     "training_ready_dpo": "training/phase15-dpo-preference-reviewed.jsonl"
+  },
+  "validation": {
+    "openrouter_p0_regression": {
+      "status": "pass",
+      "provider": "openrouter",
+      "report": "evaluation/reports/openrouter-phase15-sft-dpo-ready.json",
+      "total_cases": 26,
+      "passed": 26,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "release_gate": "PASS",
+      "schema_validity_rate": 1.0,
+      "policy_consistency": 1.0,
+      "risk_recall": 1.0,
+      "benign_pass_rate": 1.0,
+      "unsafe_allow_count": 0,
+      "leakage_count": 0
+    }
+  },
+  "freeze": {
+    "status": "frozen",
+    "artifact": "evaluation/phase15-training-freeze.json",
+    "frozen_at": "2026-06-30T16:54:00+08:00",
+    "scope": "phase15_bootstrap_sft_dpo_training_ready"
   }
 }
