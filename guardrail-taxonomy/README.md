@@ -305,7 +305,7 @@ python3 scripts/audit_phase15_assets.py \
   --require-dpo-review
 ```
 
-当前 DPO 状态：审核 workflow 已就绪，52 条 preference pairs 待 reviewer 填写并 apply。
+**DPO 判收（2026-06-30）**：`wab` 完成 52/52，`training/phase15-dpo-preference-reviewed.jsonl` 已生成；SFT+DPO 严格联合审计 PASS。
 
 ### P0 评测集统计
 

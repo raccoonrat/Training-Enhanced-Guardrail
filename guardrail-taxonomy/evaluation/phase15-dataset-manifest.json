@@ -95,13 +95,18 @@
       "strict_audit_passed": true
     },
     "dpo_review": {
-      "status": "pending",
+      "status": "complete",
       "required_records": 52,
       "artifact": "training/phase15-dpo-preference-reviewed.jsonl",
       "queue": "evaluation/review/phase15-dpo-review-queue.jsonl",
-      "decisions": "evaluation/review/phase15-dpo-review-decisions.jsonl"
+      "decisions": "evaluation/review/phase15-dpo-review-decisions.jsonl",
+      "reviewer": "wab",
+      "reviewed_records": 52,
+      "apply_report": "evaluation/review/phase15-dpo-review-apply-report.json",
+      "audit_report": "evaluation/review/phase15-sft-dpo-reviewed-quality-report.json",
+      "strict_audit_passed": true
     },
     "training_ready_sft": "training/phase15-sft-reviewed-second.jsonl",
-    "training_ready_dpo": null
+    "training_ready_dpo": "training/phase15-dpo-preference-reviewed.jsonl"
   }
 }
