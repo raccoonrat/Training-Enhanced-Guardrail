@@ -68,4 +68,4 @@ deliverables_checklist:
   - phase15_dpo_human_review_52_of_52: done
   - phase15_scaled_first_batch_5200_sft_2600_dpo: done_pending_review
   - full_5k_10k_sft_samples: pending_phase_1_5
-  - llm_as_judge_secondary: pending_phase_1_5
+  - llm_as_judge_secondary: queue_exported_pending_judgment

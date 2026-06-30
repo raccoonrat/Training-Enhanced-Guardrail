@@ -145,7 +145,7 @@
       "sft_records": 10400,
       "dpo_preference_pairs": 5200
     },
-    "next_step": "run LLM-as-judge secondary review and required human review",
+    "next_step": "complete LLM-as-judge decisions and apply judge metadata",
     "dry_run_script": "scripts/generate_phase15_scaled_assets.py",
     "dry_run_report": "evaluation/phase15-scale-dry-run-report.json",
     "dry_run_valid": true,
@@ -159,6 +159,18 @@
       "sft_records": 5200,
       "dpo_preference_pairs": 2600
     },
-    "basic_audit_passed": true
+    "basic_audit_passed": true,
+    "llm_as_judge": {
+      "status": "queue_exported_pending_judgment",
+      "queue": "evaluation/review/phase15-llm-judge-queue.jsonl",
+      "decisions": "evaluation/review/phase15-llm-judge-decisions.jsonl",
+      "decisions_template": "evaluation/review/phase15-llm-judge-decisions.template.jsonl",
+      "queue_report": "evaluation/review/phase15-llm-judge-queue-report.json",
+      "apply_report": "evaluation/review/phase15-llm-judge-apply-report.json",
+      "queue_items": 3421,
+      "sft_items": 2232,
+      "dpo_items": 1189,
+      "next_step": "fill judge_model, judged_at, and judge_decision for queued items"
+    }
   }
 }

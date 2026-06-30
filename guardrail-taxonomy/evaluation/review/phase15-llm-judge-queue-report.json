@@ -1,0 +1,28 @@
+{
+  "input": {
+    "sft": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-sft-scaled-5200.jsonl",
+    "dpo": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-dpo-scaled-2600.jsonl",
+    "config": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/evaluation/phase15-scale-config.json"
+  },
+  "outputs": {
+    "queue": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/evaluation/review/phase15-llm-judge-queue.jsonl",
+    "decisions_template": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/evaluation/review/phase15-llm-judge-decisions.template.jsonl",
+    "decisions": "evaluation/review/phase15-llm-judge-decisions.jsonl"
+  },
+  "summary": {
+    "queue_items": 3421,
+    "sft_items": 2232,
+    "dpo_items": 1189,
+    "reason_counts": {
+      "dpo:critical:100%": 551,
+      "dpo:dpo_weak_safe_response:100%": 260,
+      "dpo:dpo_wrong_category:100%": 260,
+      "dpo:high_stratified_sample:20%": 198,
+      "dpo:medium_low_stratified_sample:10%": 92,
+      "sft:critical:100%": 1040,
+      "sft:destructive_tool_surface:100%": 1040,
+      "sft:high_stratified_sample:20%": 451,
+      "sft:medium_low_stratified_sample:10%": 197
+    }
+  }
+}
