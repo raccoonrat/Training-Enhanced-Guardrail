@@ -1,0 +1,141 @@
+{
+  "version": "1.5.0-scale.1",
+  "source_baseline": {
+    "freeze_manifest": "evaluation/phase15-training-freeze.json",
+    "sft_seed": "training/phase15-sft-reviewed-second.jsonl",
+    "dpo_seed": "training/phase15-dpo-preference-reviewed.jsonl",
+    "p0_benchmark": "benchmarks/p0-seed-set.jsonl"
+  },
+  "targets": {
+    "first_batch": {
+      "sft_records": 5200,
+      "dpo_preference_pairs": 2600
+    },
+    "second_batch": {
+      "sft_records": 10400,
+      "dpo_preference_pairs": 5200
+    }
+  },
+  "sft_distribution": {
+    "primary_category_share": {
+      "SEC": 0.25,
+      "PRI": 0.25,
+      "SAF": 0.25,
+      "REL": 0.2,
+      "BENIGN": 0.05
+    },
+    "split_share": {
+      "train": 0.7,
+      "val": 0.15,
+      "test": 0.15
+    },
+    "severity_share": {
+      "low": 0.1,
+      "medium": 0.3,
+      "high": 0.4,
+      "critical": 0.2
+    },
+    "min_decision_class_share": 0.05,
+    "min_records_per_risk_id": 20,
+    "split_assignment": "deterministic_sample_id_hash"
+  },
+  "dpo_distribution": {
+    "rejected_mode_share": {
+      "unsafe_allow": 0.3,
+      "missing_audit": 0.2,
+      "over_refusal": 0.15,
+      "severity_downgrade": 0.15,
+      "wrong_category": 0.1,
+      "weak_safe_response": 0.1
+    }
+  },
+  "generation_axes": {
+    "prompt_wrappers": [
+      "enterprise_workflow",
+      "customer_support",
+      "agent_planning",
+      "tool_execution",
+      "retrieval_qa",
+      "memory_update",
+      "audit_log_review"
+    ],
+    "risk_surfaces": [
+      "user_input",
+      "retrieval_context",
+      "tool_call",
+      "tool_result",
+      "memory",
+      "agent_plan",
+      "system_prompt",
+      "external_integration"
+    ],
+    "intent_contexts": [
+      "malicious",
+      "ambiguous",
+      "authorized",
+      "defensive",
+      "compliance_query",
+      "business_operation",
+      "benign"
+    ],
+    "authority_variants": [
+      "unknown",
+      "delegated_admin",
+      "end_user",
+      "compliance_reviewer",
+      "untrusted_external_content"
+    ],
+    "style_variants": [
+      "concise_request",
+      "ticket_style",
+      "chat_history",
+      "structured_request",
+      "noisy_user_prose"
+    ],
+    "tool_variants": [
+      "read_only_tool",
+      "destructive_tool",
+      "credentialed_api",
+      "database_update",
+      "outbound_network_call"
+    ]
+  },
+  "quality_gates": {
+    "schema_validity_rate": 1.0,
+    "duplicate_sample_ids_max": 0,
+    "actionability_violations_max": 0,
+    "family_leakage_violations_max": 0,
+    "p0_release_gate_required": "PASS"
+  },
+  "llm_as_judge": {
+    "role": "advisory_filter",
+    "required_coverage": {
+      "critical": 1.0,
+      "destructive_tool_surface": 1.0,
+      "dpo_wrong_category": 1.0,
+      "dpo_weak_safe_response": 1.0,
+      "high_stratified_sample": 0.2,
+      "medium_low_stratified_sample": 0.1,
+      "automated_lint_flagged": 1.0
+    },
+    "labels": [
+      "approve",
+      "needs_changes",
+      "reject",
+      "escalate_to_human"
+    ],
+    "human_review_required_for": [
+      "needs_changes",
+      "reject",
+      "escalate_to_human",
+      "critical_first_expanded_batch",
+      "minimum_5_percent_stratified_other_records"
+    ]
+  },
+  "outputs": {
+    "first_batch_sft": "training/phase15-sft-scaled-5200.jsonl",
+    "first_batch_dpo": "training/phase15-dpo-scaled-2600.jsonl",
+    "first_batch_manifest": "evaluation/phase15-scale-manifest.json",
+    "first_batch_quality_report": "evaluation/review/phase15-scale-quality-report.json"
+  }
+}

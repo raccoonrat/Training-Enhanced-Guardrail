@@ -1,0 +1,83 @@
+{
+  "version": "1.5.0-scale.1",
+  "mode": "dry_run",
+  "batch": "first_batch",
+  "source_status": {
+    "freeze_manifest": {
+      "path": "evaluation/phase15-training-freeze.json",
+      "exists": true,
+      "bytes": 2888
+    },
+    "sft_seed": {
+      "path": "training/phase15-sft-reviewed-second.jsonl",
+      "exists": true,
+      "bytes": 253291
+    },
+    "dpo_seed": {
+      "path": "training/phase15-dpo-preference-reviewed.jsonl",
+      "exists": true,
+      "bytes": 106817
+    },
+    "p0_benchmark": {
+      "path": "benchmarks/p0-seed-set.jsonl",
+      "exists": true,
+      "bytes": 15288
+    }
+  },
+  "targets": {
+    "sft_records": 5200,
+    "dpo_preference_pairs": 2600
+  },
+  "planned_counts": {
+    "sft_primary_category": {
+      "BENIGN": 260,
+      "PRI": 1300,
+      "REL": 1040,
+      "SAF": 1300,
+      "SEC": 1300
+    },
+    "sft_split": {
+      "test": 780,
+      "train": 3640,
+      "val": 780
+    },
+    "sft_severity": {
+      "critical": 1040,
+      "high": 2080,
+      "low": 520,
+      "medium": 1560
+    },
+    "dpo_rejected_mode": {
+      "missing_audit": 520,
+      "over_refusal": 390,
+      "severity_downgrade": 390,
+      "unsafe_allow": 780,
+      "weak_safe_response": 260,
+      "wrong_category": 260
+    }
+  },
+  "quality_gates": {
+    "schema_validity_rate": 1.0,
+    "duplicate_sample_ids_max": 0,
+    "actionability_violations_max": 0,
+    "family_leakage_violations_max": 0,
+    "p0_release_gate_required": "PASS"
+  },
+  "llm_as_judge_required_coverage": {
+    "critical": 1.0,
+    "destructive_tool_surface": 1.0,
+    "dpo_wrong_category": 1.0,
+    "dpo_weak_safe_response": 1.0,
+    "high_stratified_sample": 0.2,
+    "medium_low_stratified_sample": 0.1,
+    "automated_lint_flagged": 1.0
+  },
+  "outputs": {
+    "first_batch_sft": "training/phase15-sft-scaled-5200.jsonl",
+    "first_batch_dpo": "training/phase15-dpo-scaled-2600.jsonl",
+    "first_batch_manifest": "evaluation/phase15-scale-manifest.json",
+    "first_batch_quality_report": "evaluation/review/phase15-scale-quality-report.json"
+  },
+  "valid": true,
+  "errors": []
+}
