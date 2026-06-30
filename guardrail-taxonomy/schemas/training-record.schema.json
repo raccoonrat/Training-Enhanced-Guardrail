@@ -266,7 +266,8 @@
           "type": "array",
           "items": { "type": "string" },
           "minItems": 1
-        }
+        },
+        "quality": { "$ref": "#/$defs/quality_block" }
       }
     },
     "kto_record": {

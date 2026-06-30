@@ -64,5 +64,7 @@ deliverables_checklist:
   - phase15_sft_human_review_workflow: done
   - phase15_sft_second_review_workflow: done
   - phase15_sft_second_review_80_of_80: done
+  - phase15_dpo_human_review_workflow: done
+  - phase15_dpo_human_review_52_of_52: pending_phase_1_5
   - full_5k_10k_sft_samples: pending_phase_1_5
   - llm_as_judge_secondary: pending_phase_1_5

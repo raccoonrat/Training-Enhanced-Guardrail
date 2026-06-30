@@ -231,6 +231,82 @@ python3 scripts/audit_phase15_assets.py \
 
 **二审判收（2026-06-30）**：`wyh` 完成 80/80，`training/phase15-sft-reviewed-second.jsonl` 已生成，严格审计 PASS。训练用 SFT 以该文件为准；其余 24 条 medium/low 非 REL 样本仅一审、无需二审。
 
+### Phase 1.5 DPO 人工审核
+
+SFT+DPO 联合训练前，52 条 DPO preference pairs 也需要人工确认 `chosen` 是否严格优于 `rejected`，以及 rejected negative mode 是否清晰可学。
+
+1. 导出 DPO 审核队列：
+
+```bash
+python3 scripts/export_phase15_dpo_review_queue.py
+```
+
+产物：
+
+- `evaluation/review/phase15-dpo-review-queue.jsonl` — reviewer 阅读用队列，包含 input/chosen/rejected/negative mode/checklist
+- `evaluation/review/phase15-dpo-review-decisions.template.jsonl` — reviewer 可填写的审核决策模板
+
+如已确定 reviewer，可直接生成工作文件：
+
+```bash
+python3 scripts/export_phase15_dpo_review_queue.py \
+  --default-reviewer reviewer.name \
+  --decisions evaluation/review/phase15-dpo-review-decisions.jsonl
+```
+
+2. Reviewer 填写 52 条 DPO 审核决策：
+
+```json
+{
+  "sample_id": "phase15-dpo-p0-sec-001-01",
+  "review_decision": "approve",
+  "reviewer": "reviewer.name",
+  "reviewed_at": "2026-06-30T12:00:00+00:00",
+  "notes": "Chosen is policy-superior; rejected is a clear unsafe_allow negative.",
+  "checklist": {
+    "chosen_preferred": true,
+    "chosen_policy_correct": true,
+    "rejected_negative_mode_clear": true,
+    "preference_signal_useful": true,
+    "audit_flags_correct": true
+  }
+}
+```
+
+DPO `approve` 通过要求：
+
+- `review_decision` 为 `approve`
+- `reviewer` 非空
+- `reviewed_at` 非空
+- checklist 全部为 `true`
+
+`reject` 或 `needs_changes` 会保留为 `pending_human_review`，并在 `quality.review` 中留下原因。
+
+3. 先 dry-run，再生成 reviewed DPO 文件：
+
+```bash
+python3 scripts/apply_phase15_dpo_review.py \
+  --decisions evaluation/review/phase15-dpo-review-decisions.jsonl \
+  --dry-run
+
+python3 scripts/apply_phase15_dpo_review.py \
+  --decisions evaluation/review/phase15-dpo-review-decisions.jsonl \
+  --output training/phase15-dpo-preference-reviewed.jsonl
+```
+
+4. SFT+DPO 联合训练前运行严格审计：
+
+```bash
+python3 scripts/audit_phase15_assets.py \
+  --sft training/phase15-sft-reviewed-second.jsonl \
+  --dpo training/phase15-dpo-preference-reviewed.jsonl \
+  --report evaluation/review/phase15-sft-dpo-reviewed-quality-report.json \
+  --require-second-review \
+  --require-dpo-review
+```
+
+当前 DPO 状态：审核 workflow 已就绪，52 条 preference pairs 待 reviewer 填写并 apply。
+
 ### P0 评测集统计
 
 - 合计 **26** 条 P0 seed cases（SEC 5 + PRI 5 + SAF 6 + REL 5 + Benign 5）

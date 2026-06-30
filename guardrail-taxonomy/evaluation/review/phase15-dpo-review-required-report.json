@@ -1,0 +1,169 @@
+{
+  "version": "1.5.0",
+  "inputs": {
+    "sft_records": 104,
+    "dpo_preference_pairs": 52
+  },
+  "coverage": {
+    "sft_split_counts": {
+      "test": 26,
+      "train": 52,
+      "val": 26
+    },
+    "primary_category_counts": {
+      "PRI": 28,
+      "REL": 24,
+      "SAF": 28,
+      "SEC": 24
+    },
+    "decision_counts": {
+      "allow": 8,
+      "allow_with_constraints": 12,
+      "block_tool_call": 8,
+      "escalate": 4,
+      "redact": 8,
+      "refuse": 28,
+      "safe_complete": 8,
+      "terminate_execution": 12,
+      "transform": 16
+    },
+    "risk_id_counts": {
+      "PRI-1.1": 12,
+      "PRI-2.1": 8,
+      "PRI-4.1": 4,
+      "PRI-4.2": 4,
+      "PRI-6.1": 4,
+      "PRI-6.3": 4,
+      "REL-1.2": 4,
+      "REL-1.3": 4,
+      "REL-2.2": 4,
+      "REL-2.3": 4,
+      "REL-3.1": 4,
+      "REL-4.1": 4,
+      "REL-5.2": 4,
+      "SAF-1.2": 4,
+      "SAF-2.1": 8,
+      "SAF-2.2": 4,
+      "SAF-3.2": 4,
+      "SAF-5.1": 4,
+      "SAF-5.3": 4,
+      "SEC-1.1": 4,
+      "SEC-1.2": 4,
+      "SEC-1.3": 4,
+      "SEC-2.1": 12,
+      "SEC-2.2": 8,
+      "SEC-2.3": 4,
+      "SEC-3.1": 8,
+      "SEC-3.5": 4,
+      "SEC-4.1": 4,
+      "SEC-4.2": 4
+    },
+    "review_status_counts": {
+      "human_reviewed": 104
+    },
+    "second_review_status_counts": {
+      "missing": 24,
+      "second_reviewed": 80
+    },
+    "dpo_review_status_counts": {
+      "missing": 52
+    },
+    "dpo_rejected_modes": {
+      "missing_audit": 26,
+      "over_refusal": 5,
+      "unsafe_allow": 21
+    }
+  },
+  "integrity": {
+    "duplicate_sample_ids": [],
+    "review_state_conflict_sample_ids": [],
+    "second_review_state_conflict_sample_ids": [],
+    "dpo_review_state_conflict_sample_ids": [],
+    "same_reviewer_second_review_sample_ids": []
+  },
+  "second_review": {
+    "required_by_policy_count": 80,
+    "missing_required_count": 0,
+    "missing_required_sample_ids": []
+  },
+  "dpo_review": {
+    "required_by_policy_count": 52,
+    "missing_required_count": 52,
+    "missing_required_sample_ids": [
+      "phase15-dpo-p0-sec-001-01",
+      "phase15-dpo-p0-sec-001-02",
+      "phase15-dpo-p0-sec-002-01",
+      "phase15-dpo-p0-sec-002-02",
+      "phase15-dpo-p0-sec-003-01",
+      "phase15-dpo-p0-sec-003-02",
+      "phase15-dpo-p0-sec-004-01",
+      "phase15-dpo-p0-sec-004-02",
+      "phase15-dpo-p0-sec-005-01",
+      "phase15-dpo-p0-sec-005-02",
+      "phase15-dpo-p0-pri-001-01",
+      "phase15-dpo-p0-pri-001-02",
+      "phase15-dpo-p0-pri-002-01",
+      "phase15-dpo-p0-pri-002-02",
+      "phase15-dpo-p0-pri-003-01",
+      "phase15-dpo-p0-pri-003-02",
+      "phase15-dpo-p0-pri-004-01",
+      "phase15-dpo-p0-pri-004-02",
+      "phase15-dpo-p0-pri-005-01",
+      "phase15-dpo-p0-pri-005-02",
+      "phase15-dpo-p0-saf-001-01",
+      "phase15-dpo-p0-saf-001-02",
+      "phase15-dpo-p0-saf-002-01",
+      "phase15-dpo-p0-saf-002-02",
+      "phase15-dpo-p0-saf-003-01",
+      "phase15-dpo-p0-saf-003-02",
+      "phase15-dpo-p0-saf-004-01",
+      "phase15-dpo-p0-saf-004-02",
+      "phase15-dpo-p0-saf-005-01",
+      "phase15-dpo-p0-saf-005-02",
+      "phase15-dpo-p0-saf-006-01",
+      "phase15-dpo-p0-saf-006-02",
+      "phase15-dpo-p0-rel-001-01",
+      "phase15-dpo-p0-rel-001-02",
+      "phase15-dpo-p0-rel-002-01",
+      "phase15-dpo-p0-rel-002-02",
+      "phase15-dpo-p0-rel-003-01",
+      "phase15-dpo-p0-rel-003-02",
+      "phase15-dpo-p0-rel-004-01",
+      "phase15-dpo-p0-rel-004-02",
+      "phase15-dpo-p0-rel-005-01",
+      "phase15-dpo-p0-rel-005-02",
+      "phase15-dpo-p0-benign-001-01",
+      "phase15-dpo-p0-benign-001-02",
+      "phase15-dpo-p0-benign-002-01",
+      "phase15-dpo-p0-benign-002-02",
+      "phase15-dpo-p0-benign-003-01",
+      "phase15-dpo-p0-benign-003-02",
+      "phase15-dpo-p0-benign-004-01",
+      "phase15-dpo-p0-benign-004-02",
+      "phase15-dpo-p0-benign-005-01",
+      "phase15-dpo-p0-benign-005-02"
+    ]
+  },
+  "quality_gates": {
+    "sft_min_records": true,
+    "dpo_min_pairs": true,
+    "sft_has_train_val_test": true,
+    "sft_has_all_primary_categories": true,
+    "dpo_has_required_negative_modes": true,
+    "no_duplicate_sample_ids": true,
+    "no_review_state_conflicts": true,
+    "no_second_review_state_conflicts": true,
+    "no_dpo_review_state_conflicts": true,
+    "second_review_independent": true,
+    "required_second_review_complete": true,
+    "required_dpo_review_complete": false
+  },
+  "passed": false,
+  "schema": {
+    "valid": true,
+    "errors": {
+      "sft": [],
+      "dpo": []
+    }
+  }
+}

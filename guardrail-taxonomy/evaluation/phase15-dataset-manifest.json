@@ -94,6 +94,14 @@
       "audit_report": "evaluation/review/phase15-second-reviewed-quality-report.json",
       "strict_audit_passed": true
     },
-    "training_ready_sft": "training/phase15-sft-reviewed-second.jsonl"
+    "dpo_review": {
+      "status": "pending",
+      "required_records": 52,
+      "artifact": "training/phase15-dpo-preference-reviewed.jsonl",
+      "queue": "evaluation/review/phase15-dpo-review-queue.jsonl",
+      "decisions": "evaluation/review/phase15-dpo-review-decisions.jsonl"
+    },
+    "training_ready_sft": "training/phase15-sft-reviewed-second.jsonl",
+    "training_ready_dpo": null
   }
 }
