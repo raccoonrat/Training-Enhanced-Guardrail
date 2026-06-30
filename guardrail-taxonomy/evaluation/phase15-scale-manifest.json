@@ -1,0 +1,119 @@
+{
+  "version": "1.5.0-scale.1",
+  "batch": "first_batch",
+  "source_baseline": {
+    "freeze_manifest": "evaluation/phase15-training-freeze.json",
+    "sft_seed": "training/phase15-sft-reviewed-second.jsonl",
+    "dpo_seed": "training/phase15-dpo-preference-reviewed.jsonl",
+    "p0_benchmark": "benchmarks/p0-seed-set.jsonl"
+  },
+  "outputs": {
+    "sft_path": "training/phase15-sft-scaled-5200.jsonl",
+    "dpo_path": "training/phase15-dpo-scaled-2600.jsonl",
+    "sft_records": 5200,
+    "dpo_preference_pairs": 2600,
+    "sft_sha256": "63b0c1060bf0cd281a3c555a18fc677758999d7dc1331eb3146a4d80e76711b3",
+    "dpo_sha256": "c45b7b9823f467b16cbfed6b2ae98fd01dd8d6785cc619e82cff1a20fbdfbae5"
+  },
+  "coverage": {
+    "sft": {
+      "split": {
+        "test": 780,
+        "train": 3640,
+        "val": 780
+      },
+      "primary_category": {
+        "BENIGN": 260,
+        "PRI": 1300,
+        "REL": 1040,
+        "SAF": 1300,
+        "SEC": 1300
+      },
+      "schema_primary_category": {
+        "PRI": 1415,
+        "REL": 1158,
+        "SAF": 1313,
+        "SEC": 1314
+      },
+      "severity": {
+        "critical": 1040,
+        "high": 2080,
+        "low": 520,
+        "medium": 1560
+      },
+      "decision": {
+        "allow": 183,
+        "allow_with_constraints": 472,
+        "block_tool_call": 553,
+        "escalate": 301,
+        "redact": 716,
+        "refuse": 1289,
+        "safe_complete": 113,
+        "terminate_execution": 639,
+        "transform": 934
+      }
+    },
+    "dpo": {
+      "rejected_mode": {
+        "missing_audit": 520,
+        "over_refusal": 390,
+        "severity_downgrade": 390,
+        "unsafe_allow": 780,
+        "weak_safe_response": 260,
+        "wrong_category": 260
+      },
+      "chosen_primary_category": {
+        "PRI": 675,
+        "REL": 655,
+        "SAF": 679,
+        "SEC": 591
+      },
+      "chosen_severity": {
+        "critical": 551,
+        "high": 1000,
+        "low": 561,
+        "medium": 488
+      }
+    }
+  },
+  "planned_counts": {
+    "sft_primary_category": {
+      "BENIGN": 260,
+      "PRI": 1300,
+      "REL": 1040,
+      "SAF": 1300,
+      "SEC": 1300
+    },
+    "sft_split": {
+      "test": 780,
+      "train": 3640,
+      "val": 780
+    },
+    "sft_severity": {
+      "critical": 1040,
+      "high": 2080,
+      "low": 520,
+      "medium": 1560
+    },
+    "dpo_rejected_mode": {
+      "missing_audit": 520,
+      "over_refusal": 390,
+      "severity_downgrade": 390,
+      "unsafe_allow": 780,
+      "weak_safe_response": 260,
+      "wrong_category": 260
+    }
+  },
+  "review_status": {
+    "sft": "pending_human_review",
+    "dpo": "pending_human_review",
+    "llm_as_judge": "pending"
+  },
+  "schema": {
+    "valid": true,
+    "errors": {
+      "sft": [],
+      "dpo": []
+    }
+  }
+}

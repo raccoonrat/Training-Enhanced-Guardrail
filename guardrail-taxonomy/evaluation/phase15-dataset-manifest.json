@@ -134,7 +134,7 @@
     "scope": "phase15_bootstrap_sft_dpo_training_ready"
   },
   "scale_plan": {
-    "status": "dry_run_planned",
+    "status": "first_batch_generated_pending_review",
     "plan": "evaluation/phase15-scale-plan.md",
     "config": "evaluation/phase15-scale-config.json",
     "first_batch_targets": {
@@ -145,9 +145,20 @@
       "sft_records": 10400,
       "dpo_preference_pairs": 5200
     },
-    "next_step": "enable full JSONL generation for first expanded batch",
+    "next_step": "run LLM-as-judge secondary review and required human review",
     "dry_run_script": "scripts/generate_phase15_scaled_assets.py",
     "dry_run_report": "evaluation/phase15-scale-dry-run-report.json",
-    "dry_run_valid": true
+    "dry_run_valid": true,
+    "generated_manifest": "evaluation/phase15-scale-manifest.json",
+    "quality_report": "evaluation/review/phase15-scale-quality-report.json",
+    "first_batch_outputs": {
+      "sft": "training/phase15-sft-scaled-5200.jsonl",
+      "dpo": "training/phase15-dpo-scaled-2600.jsonl"
+    },
+    "first_batch_counts": {
+      "sft_records": 5200,
+      "dpo_preference_pairs": 2600
+    },
+    "basic_audit_passed": true
   }
 }
