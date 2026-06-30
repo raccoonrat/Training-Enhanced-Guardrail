@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "first_reviewer": "wab",
+  "second_reviewer": "wyh",
+  "scope": "full_80",
+  "selection_rules": [
+    "severity:high",
+    "severity:critical",
+    "primary_category:REL"
+  ],
+  "challenge_resolution": {
+    "workflow": "fix_sft_or_first_review_then_reapply_first_then_second",
+    "steps": [
+      "Mark sample second_review_decision=challenge in decisions file and apply second review",
+      "Fix training record labels/expected_output and/or update first-review decisions",
+      "Re-apply first review to training/phase15-sft-reviewed.jsonl",
+      "Re-export or update second-review decision for the sample",
+      "Re-apply second review until second_reviewed"
+    ]
+  },
+  "strict_audit_command": "python3 scripts/audit_phase15_assets.py --sft training/phase15-sft-reviewed-second.jsonl --report evaluation/review/phase15-second-reviewed-quality-report.json --require-second-review"
+}

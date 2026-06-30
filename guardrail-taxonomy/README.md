@@ -148,29 +148,38 @@ python3 scripts/apply_phase15_review.py \
   --in-place
 ```
 
-5. 导出独立二次复核队列（建议用于进入训练前的抽检门槛）：
+5. 导出独立二次复核队列（进入训练前的双人抽检门槛）：
+
+**二审政策**（见 `evaluation/review/phase15-second-review-policy.json`）：
+
+| 项 | 值 |
+|----|-----|
+| 一审 reviewer | `wab` |
+| 二审 reviewer | `wyh` |
+| 范围 | 全量 **80** 条（high/critical + REL） |
+| `challenge` 处理 | 回改 SFT 或一审结论 → 重新 apply 一审 → 再二审 |
 
 ```bash
-python3 scripts/export_phase15_second_review_queue.py
+python3 scripts/export_phase15_second_review_queue.py \
+  --default-reviewer wyh \
+  --decisions evaluation/review/phase15-sft-second-review-decisions.jsonl
 ```
 
 二审队列从 `training/phase15-sft-reviewed.jsonl` 中确定性选择：
 
 - 所有 `high` / `critical` severity 样本
 - 所有 `REL` 主类样本
-- 当前 Phase 1.5 reviewed 基线会导出 80 条二审候选
+- 当前 Phase 1.5 reviewed 基线会导出 **80** 条二审候选
 
 产物：
 
-- `evaluation/review/phase15-sft-second-review-queue.jsonl`
+- `evaluation/review/phase15-sft-second-review-queue.jsonl` — 含 input/labels/一审结论，供 `wyh` 审阅
 - `evaluation/review/phase15-sft-second-review-decisions.template.jsonl`
+- `evaluation/review/phase15-sft-second-review-decisions.jsonl` — `wyh` 工作文件（`reviewer` 已预填）
 
-6. 第二 reviewer 复制模板、填写独立二审决策，然后应用到新文件：
+6. `wyh` 填写 80 条二审决策（每条需填 `reviewed_at`；`approve` 时 checklist 全 `true`），然后应用：
 
 ```bash
-cp evaluation/review/phase15-sft-second-review-decisions.template.jsonl \
-   evaluation/review/phase15-sft-second-review-decisions.jsonl
-
 python3 scripts/apply_phase15_second_review.py \
   --decisions evaluation/review/phase15-sft-second-review-decisions.jsonl \
   --dry-run
@@ -183,8 +192,31 @@ python3 scripts/apply_phase15_second_review.py \
 二审通过要求：
 
 - `second_review_decision` 为 `approve`
-- 二审 `reviewer` 非空，且默认必须不同于一审 reviewer
+- 二审 `reviewer` 为 `wyh`，且不同于一审 `wab`
 - 二审 checklist 全部为 `true`
+
+**`challenge` 闭环**（`wyh` 对某条标 `challenge` 时）：
+
+1. 在 decisions 中设 `second_review_decision: "challenge"` 并写清 `notes`，先 apply 二审记录争议
+2. 回改 SFT 内容（`training/phase15-sft-bootstrap.jsonl` 或 reviewed 文件中的 `labels` / `expected_output`）和/或更新一审决策 `evaluation/review/phase15-sft-review-decisions.jsonl`
+3. `wab` 重新 apply 一审：
+
+```bash
+python3 scripts/apply_phase15_review.py \
+  --decisions evaluation/review/phase15-sft-review-decisions.jsonl \
+  --output training/phase15-sft-reviewed.jsonl
+```
+
+4. 更新该 `sample_id` 的二审决策为 `approve`（或继续 `challenge`），再 apply 二审
+5. 若有多条 challenge，可用 `--only-challenged` 重新导出子队列：
+
+```bash
+python3 scripts/export_phase15_second_review_queue.py \
+  --sft training/phase15-sft-reviewed-second.jsonl \
+  --only-challenged \
+  --default-reviewer wyh \
+  --queue evaluation/review/phase15-sft-second-review-challenge-queue.jsonl
+```
 
 7. 使用严格二审门槛审计：
 
@@ -195,7 +227,7 @@ python3 scripts/audit_phase15_assets.py \
   --require-second-review
 ```
 
-未完成真实二审前，不要伪造 `phase15-sft-second-review-decisions.jsonl`；保留 queue/template 即表示“二审待执行”。
+未完成 `wyh` 的真实二审前，不要在 decisions 中填写虚假的 `reviewed_at`；全 `approve` 但无时间戳不会被 apply 脚本接受。
 
 ### P0 评测集统计
 

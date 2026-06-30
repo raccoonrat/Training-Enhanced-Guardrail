@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "second_reviewed": 80,
+    "unchanged_no_decision": 24,
+    "unknown_decisions": 0
+  },
+  "unknown_decision_sample_ids": [],
+  "input": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-sft-reviewed.jsonl",
+  "decisions": "evaluation/review/phase15-sft-second-review-decisions.jsonl",
+  "output": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-sft-reviewed-second.jsonl",
+  "dry_run": true,
+  "schema_valid": true,
+  "schema_errors": []
+}

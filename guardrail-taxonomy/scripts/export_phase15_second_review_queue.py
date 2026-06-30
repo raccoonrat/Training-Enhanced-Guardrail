@@ -13,6 +13,7 @@ DEFAULT_QUEUE = ROOT / "evaluation" / "review" / "phase15-sft-second-review-queu
 DEFAULT_DECISIONS_TEMPLATE = (
     ROOT / "evaluation" / "review" / "phase15-sft-second-review-decisions.template.jsonl"
 )
+DEFAULT_DECISIONS = ROOT / "evaluation" / "review" / "phase15-sft-second-review-decisions.jsonl"
 
 SECOND_REVIEW_CHECKLIST = [
     "second reviewer is independent from the first reviewer",
@@ -30,6 +31,13 @@ def _load_jsonl(path: Path) -> list[dict]:
             if line.strip():
                 records.append(json.loads(line))
     return records
+
+
+def _write_jsonl(path: Path, records: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for record in records:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def _second_review_reasons(record: dict) -> list[str]:
@@ -52,27 +60,16 @@ def _eligible(record: dict) -> bool:
     return labels["severity"] in {"high", "critical"} or labels["primary_category"] == "REL"
 
 
-def _review_item(record: dict) -> dict:
-    first_review = record.get("quality", {}).get("review", {})
-    return {
-        "sample_id": record["sample_id"],
-        "split": record["split"],
-        "first_reviewer": first_review.get("reviewer", ""),
-        "second_review_reasons": _second_review_reasons(record),
-        "input": record["input"],
-        "labels": record["labels"],
-        "expected_output": record["expected_output"],
-        "first_review": first_review,
-        "second_review_checklist": SECOND_REVIEW_CHECKLIST,
-        "second_review_decision_template": _decision_template(record),
-    }
+def _eligible_challenged(record: dict) -> bool:
+    second_review = record.get("quality", {}).get("second_review", {})
+    return second_review.get("applied_status") == "second_review_challenge"
 
 
-def _decision_template(record: dict) -> dict:
+def _decision_template(record: dict, *, default_reviewer: str = "") -> dict:
     return {
         "sample_id": record["sample_id"],
         "second_review_decision": "approve",
-        "reviewer": "",
+        "reviewer": default_reviewer,
         "reviewed_at": "",
         "notes": "",
         "checklist": {
@@ -86,11 +83,22 @@ def _decision_template(record: dict) -> dict:
     }
 
 
-def _write_jsonl(path: Path, records: list[dict]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as handle:
-        for record in records:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+def _review_item(record: dict, *, default_reviewer: str = "") -> dict:
+    first_review = record.get("quality", {}).get("review", {})
+    return {
+        "sample_id": record["sample_id"],
+        "split": record["split"],
+        "first_reviewer": first_review.get("reviewer", ""),
+        "second_review_reasons": _second_review_reasons(record),
+        "input": record["input"],
+        "labels": record["labels"],
+        "expected_output": record["expected_output"],
+        "first_review": first_review,
+        "second_review_checklist": SECOND_REVIEW_CHECKLIST,
+        "second_review_decision_template": _decision_template(
+            record, default_reviewer=default_reviewer
+        ),
+    }
 
 
 def main() -> int:
@@ -98,19 +106,52 @@ def main() -> int:
     parser.add_argument("--sft", type=Path, default=DEFAULT_SFT)
     parser.add_argument("--queue", type=Path, default=DEFAULT_QUEUE)
     parser.add_argument("--decisions-template", type=Path, default=DEFAULT_DECISIONS_TEMPLATE)
+    parser.add_argument(
+        "--decisions",
+        type=Path,
+        default=None,
+        help="Optional working decisions file for the second reviewer to fill in",
+    )
+    parser.add_argument(
+        "--default-reviewer",
+        default="",
+        help="Pre-fill reviewer in exported decision templates (e.g. wyh)",
+    )
+    parser.add_argument(
+        "--only-challenged",
+        action="store_true",
+        help="Export only samples previously marked second_review_challenge",
+    )
     parser.add_argument("--limit", type=int, default=None)
     args = parser.parse_args()
 
-    records = [record for record in _load_jsonl(args.sft) if _eligible(record)]
+    all_records = _load_jsonl(args.sft)
+    if args.only_challenged:
+        records = [record for record in all_records if _eligible_challenged(record)]
+    else:
+        records = [record for record in all_records if _eligible(record)]
     if args.limit is not None:
         records = records[: args.limit]
 
-    _write_jsonl(args.queue, [_review_item(record) for record in records])
-    _write_jsonl(args.decisions_template, [_decision_template(record) for record in records])
+    reviewer = args.default_reviewer.strip()
+    queue_items = [_review_item(record, default_reviewer=reviewer) for record in records]
+    decision_items = [
+        _decision_template(record, default_reviewer=reviewer) for record in records
+    ]
 
-    print(f"Exported second-review queue: {len(records)} samples")
+    _write_jsonl(args.queue, queue_items)
+    _write_jsonl(args.decisions_template, decision_items)
+    if args.decisions is not None:
+        _write_jsonl(args.decisions, decision_items)
+
+    mode = "challenged" if args.only_challenged else "policy-selected"
+    print(f"Exported second-review queue: {len(records)} samples ({mode})")
+    if reviewer:
+        print(f"Default reviewer: {reviewer}")
     print(f"Queue: {args.queue}")
     print(f"Decisions template: {args.decisions_template}")
+    if args.decisions is not None:
+        print(f"Decisions working file: {args.decisions}")
     return 0
 
 
