@@ -2,20 +2,20 @@
   "input": {
     "sft": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-sft-scaled-5200.jsonl",
     "dpo": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-dpo-scaled-2600.jsonl",
-    "decisions": "evaluation/review/phase15-llm-judge-decisions.template.jsonl"
+    "decisions": "evaluation/review/phase15-llm-judge-decisions.jsonl"
   },
   "output": {
     "sft": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-sft-scaled-5200-judged.jsonl",
     "dpo": "/home/mpcblock/lab/github.com/raccoonrat/Training-Enhanced-Guardrail/guardrail-taxonomy/training/phase15-dpo-scaled-2600-judged.jsonl"
   },
-  "dry_run": true,
+  "dry_run": false,
   "summary": {
     "sft": {
       "unchanged_no_decision": 2968,
-      "llm_judge_incomplete": 2232
+      "llm_judge_approved": 2232
     },
     "dpo": {
-      "llm_judge_incomplete": 1189,
+      "llm_judge_approved": 1189,
       "unchanged_no_decision": 1411
     },
     "decisions": 3421,
